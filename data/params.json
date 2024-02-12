@@ -1,0 +1,7 @@
+
+{
+    "learning_rate": 0.22,
+    "batch_size": 64,
+    "epochs": 200,
+    "seed": 387
+}
