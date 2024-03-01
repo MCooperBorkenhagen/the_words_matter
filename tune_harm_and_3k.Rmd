@@ -1,0 +1,135 @@
+---
+title: "tune"
+output: html_document
+date: "2024-02-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+```
+
+## Preliminary tuning: 1_harm
+The original attempts to tune using the 3k corpus were problematic because too many patterns couldn't be used based on the standard right-side metric.
+
+```{r}
+tune_1_harm = read_csv('outputs/tune_1_harm.csv')
+```
+
+Let's see the peak of the distribution for train accuracy...
+
+```{r}
+tune_1_harm %>% 
+  arrange(desc(accuracy_train)) %>% view()
+  slice_head(n = 8) %>% 
+  select(hidden_units, learning_rate, batch_size, epochs, accuracy_train, accuracy_test, time)
+
+```
+
+### Harm v2
+
+```{r}
+tune_1_harm_2 = read_csv('outputs/tune_1_harm_2.csv')
+```
+
+Let's see the peak of the distribution for train accuracy...
+
+```{r}
+tune_1_harm %>% 
+  arrange(desc(accuracy_train)) %>% view()
+  slice_head(n = 8) %>% 
+  select(hidden_units, learning_rate, batch_size, epochs, accuracy_train, accuracy_test, time)
+
+```
+
+
+## 3k tuning without empty columns removed
+
+```{r}
+tune_3k_1a = read_csv('outputs/tune_3k_1a.csv')
+```
+
+Distribution of train and test accuracy...
+
+```{r}
+tune_3k_1a %>% 
+  select(accuracy_train, accuracy_test) %>% 
+  pivot_longer(everything()) %>% 
+  ggplot(aes(value)) +
+  geom_histogram() +
+  facet_wrap(vars(name))
+```
+
+Most perform at a very high level over train and test. Let's see what the top performer is...
+
+```{r}
+tune_3k_1a %>% 
+  filter(accuracy_train > .95) %>% 
+  arrange(desc(accuracy_train)) %>% 
+  head(10) %>% 
+  view()
+
+```
+
+### Featurewise accuracies
+
+Taking the top performer for 100 hidden units, I was to see which features are the most problematic. The `featurewise_accuracies` object has a cell for each feature for each word, where the value is `1` if the feature was correct and `0` if it was incorrect. Therefore, if the wide dataframe (with columns as features) if pivoted longer, each word then has a row for each feature with the binary outcome value. If you sum the word's features, a value of 250 (total number of features) indicates that it got every output feature right at the end of training.
+
+```{r}
+featurewise_accuracies = read_csv('outputs/tune_3k_1a_prediction_accuracies_sample_run.csv', col_names = str_c('f', seq(250)))
+
+featurewise_accuracies_long = featurewise_accuracies %>% 
+  summarise(across(everything(), sum)) %>% 
+  pivot_longer(cols = everything()) %>% 
+  rename(correct = value)
+  
+featurewise_accuracies_long %>% 
+  filter(correct < nrow(featurewise_accuracies)) %>% 
+  ggplot(aes(reorder(name, correct), correct)) +
+  geom_bar(stat = 'identity')
+
+```
+
+Let's take the frequency of the features from the actual phoneme outputs and correlate them with the featurewise accuracies. Hopefully the features that are wrong most often are wrong because they are infrequent.
+
+```{r}
+phon_targets = read_csv('data/3k/phon.csv', col_names = str_c('f', seq(250)))
+
+words = read_csv('data/3k/words.csv', col_names = "word")
+
+phon_targets_frequencies = phon_targets %>% 
+  summarise(across(everything(), sum)) %>% 
+  pivot_longer(cols = everything()) %>% 
+  rename(frequency = value)
+
+```
+
+The features that struggle are pretty much just the infrequent ones.
+
+```{r}
+featurewise_accuracies_long %>% 
+  left_join(phon_targets_frequencies) %>% 
+  summarise(cor(correct, frequency, method = "spearman"))
+```
+
+Which words (and how many) are associated with the frequencies that struggle? Here, 
+
+```{r}
+featurewise_accuracies %>%
+  rownames_to_column() %>% 
+  left_join(words %>% 
+              rownames_to_column(), by = "rowname") %>% 
+  select(-rowname) %>% 
+  pivot_longer(cols = starts_with("f")) %>% 
+  group_by(word) %>% 
+  summarise(total_incorrect_features = ncol(featurewise_accuracies)-sum(value)) %>% 
+  arrange(desc(total_incorrect_features)) %>% 
+  ggplot(aes(total_incorrect_features)) +
+  geom_histogram() +
+  theme_minimal() +
+  labs(x = "Total incorrect features", y = 'Count')
+
+```
+
+
+

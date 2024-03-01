@@ -1,0 +1,132 @@
+---
+title: "tune"
+output: html_document
+date: "2024-02-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+source('utilities.R')
+```
+
+```{r read}
+# To list only files with a specific pattern (e.g., CSV files)
+filenames <- list.files(path = "outputs/kidwords_longitudinal/", pattern = "\\.csv$", full.names = TRUE)
+
+ld = read_csv(filenames[1]) %>% 
+  mutate(epoch = NA) %>% 
+  slice(0)
+  
+  
+ld = list()
+
+# takes about 60 seconds
+for (filename in filenames) {
+  
+  seed <- sub(".*seed_([0-9]+).*", "\\1", filename)
+  epoch <- sub(".*epoch_([0-9]+).*", "\\1", filename)
+  
+  df <- read.csv(filename) %>% 
+    mutate(seed = seed,
+           epoch = as.numeric(epoch))
+  
+  ld[[filename]] <- df
+
+}
+
+num_features = 175
+
+tmp = purrr::list_rbind(ld) %>% 
+  mutate(total = rowSums(select(., starts_with("X"))),
+         accuracy = total/num_features) %>% 
+  select(epoch, word = words, sub_id = seed, condition = train_test, accuracy)
+
+tmp %>% 
+  group_by(epoch, sub_id, condition) %>% 
+  summarise(accuracy = mean(accuracy)) %>% 
+  ggplot(aes(epoch, accuracy, color = sub_id)) +
+  geom_smooth() +
+  theme(legend.position = 'none') +
+  facet_wrap(vars(condition))
+
+
+tmp %>% 
+  filter(epoch == 15) %>% 
+  view()
+
+
+```
+
+
+## Preliminary tuning: kidwords_1
+The original attempts to tune using the 3k corpus were problematic because too many patterns couldn't be used based on the standard right-side metric. Here is an attempt to get high performance over a set of kidwords. These models learn over the un-trimmed input and output patterns (i.e., `remove_cols()` is never applied).
+
+```{r}
+tune_kidwords_1 = read_csv('outputs/tune_kidwords_1.csv')
+```
+
+Let's see the peak of the distribution for train accuracy...
+
+```{r}
+tune_kidwords_1 %>% 
+  arrange(desc(accuracy_train)) %>% 
+  slice_head(n = 10) %>% 
+  select(hidden_units, learning_rate, batch_size, epochs, accuracy_train, accuracy_test, time) %>% 
+  view()
+
+```
+
+## Logitudinal Samples
+These are the same samples of words, with a different random seed selected for each run. Accuracy data is written off every 15 epochs up to 300 epochs, at which point, training stopped.
+
+```{r ReadLongruns}
+
+
+
+```
+
+## SGD
+A set of SGD runs were performed in order to determine if there is a set of hyperparameters that we could achieve under SGD that would lead to high levels of performance across train and test. SGD has the benefit of slowing down convergence (mostly) leading to greater variation in performance across words. This variability then becomes more interesting for analytic purposes.
+
+The accuracy distributions look quite good...
+
+```{r}
+tune_kidwords_2_sgd = read_csv('outputs/tune_kidwords_2_sgd.csv')
+
+tune_kidwords_2_sgd %>% 
+  select(accuracy_train, accuracy_test) %>% 
+  pivot_longer(cols = everything()) %>% 
+  ggplot(aes(value)) +
+  geom_histogram() +
+  facet_wrap(vars(name)) +
+  theme_minimal()
+  
+```
+
+Where is the peak in terms of hyperparameters?
+
+```{r}
+tune_kidwords_2_sgd %>% 
+  arrange(desc(accuracy_train)) %>% 
+  head(n = 10)
+```
+
+
+### Longitudinal runs with SGD
+
+```{r longrunsSGD}
+
+# To list only files with a specific pattern (e.g., CSV files)
+longruns_sgd = runs_to_df(path = "outputs/kidwords_2_sgd_longitudinal/")
+
+longruns_sgd %>% 
+  group_by(epoch, condition, sub_id) %>% 
+  summarise(accuracy = mean(accuracy)) %>% 
+  ggplot(aes(epoch, accuracy, color = sub_id)) +
+  geom_point() +
+  facet_wrap(vars(condition))
+
+saveRDS(longruns_sgd, file = 'outputs/kidwords_2_sgd_longitudinal/tune_kidwords_2_sgd_longitudinal.rds')
+
+```
