@@ -80,7 +80,7 @@ def learner(X, Y, seed, hidden, optimizer=None):
         optimizer = 'adam' # Adam(learning_rate=learning_rate) # was originally .1
 
     model = Sequential()
-    model.add(Dense(hidden, input_shape=(X.shape[1],)))
+    model.add(Dense(hidden, input_shape=(X.shape[1], )))
     model.add(Dense(Y.shape[1], activation='sigmoid'))
 
     model.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=[binary_accuracy, 'mse'])

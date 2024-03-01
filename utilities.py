@@ -21,3 +21,5 @@ def remove_cols(arr):
     non_zero_columns = ~np.all(arr == 0, axis=0)
     
     return arr[:, non_zero_columns]
+
+
