@@ -1,0 +1,47 @@
+---
+title: "Brute Force 2"
+output: html_document
+date: "2024-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+
+samples = read_csv('data/samples.csv', col_names = F)
+
+filenames <- list.files(path = "outputs/brute_force_2", pattern = "accuracies.csv$", full.names = TRUE)
+words = read_csv('data/kidwords/kidwords.csv', col_names = 'word')
+bf2l = list()
+
+for (filename in filenames) {
+  
+  sid <- sub(".*sample_([0-9]+).*", "\\1", filename)
+  hidden <- sub(".*hidden_([0-9]+).*", "\\1", filename)
+  
+  df <- read_csv(filename, col_names = "accuracy_unitwise") %>% 
+    mutate(sample = sid,
+           hidden = as.numeric(hidden),
+           word = words$word)
+  
+  bf2l[[filename]] <- df
+
+}
+
+
+bf2 = list_rbind(bf2l)
+
+```
+
+
+
+
+```{r}
+bf2 %>% 
+  group_by(sample, hidden) %>% 
+  summarise(acc = mean(accuracy_unitwise)) %>% 
+  ggplot(aes(factor(hidden), acc, color = hidden)) +
+  geom_violin()
+
+```
+
