@@ -33,6 +33,12 @@ bf2 = list_rbind(bf2l)
 
 ```
 
+# Aggregate dichotomous 
+
+```{r}
+
+
+```
 
 
 

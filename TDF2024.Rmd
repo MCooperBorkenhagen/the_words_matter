@@ -1,0 +1,52 @@
+---
+title: "TDF2024"
+output: html_document
+date: "2024-04-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+require(tidyverse)
+
+TDF2024 = read_csv('outputs/brute_force_2/tabulated_accuracy.csv') %>% 
+  glimpse() %>% 
+  pivot_longer(cols = train:holdout, names_to = "variable", values_to = "accuracy") %>% 
+  glimpse()
+   
+grand_mean = TDF2024 %>% 
+  group_by(variable) %>% 
+  summarise(mean_ = mean(accuracy),
+            sd_ = sd(accuracy))
+
+TDF2024 = TDF2024 %>% 
+  left_join(grand_mean) %>% 
+  mutate(accuracy_z = (accuracy-mean_)/sd_)
+
+```
+
+
+```{r}
+TDF2024 %>% 
+  filter(hidden %in% c(20, 100)) %>% 
+  ggplot(aes(factor(hidden), accuracy_z)) +
+  geom_violin() +
+  facet_wrap(vars(variable))
+
+
+```
+
+## Min max differences
+
+```{r}
+
+TDF2024 %>% 
+  filter(hidden %in% c(20, 100)) %>% 
+  group_by(variable, hidden) %>% 
+  summarise(min_ = min(accuracy_z),
+            max_ = max(accuracy_z)) %>% 
+  mutate(accuracy_z_difference = min_ - max_)
+
+
+```
+
