@@ -8,33 +8,75 @@ date: "2024-04-20"
 knitr::opts_chunk$set(echo = TRUE)
 
 require(tidyverse)
+require(papaja)
 
-TDF2024 = read_csv('outputs/brute_force_2/tabulated_accuracy.csv') %>% 
-  glimpse() %>% 
-  pivot_longer(cols = train:holdout, names_to = "variable", values_to = "accuracy") %>% 
-  glimpse()
    
 grand_mean = TDF2024 %>% 
-  group_by(variable) %>% 
+  #group_by(variable) %>% 
   summarise(mean_ = mean(accuracy),
             sd_ = sd(accuracy))
 
 TDF2024 = TDF2024 %>% 
-  left_join(grand_mean) %>% 
-  mutate(accuracy_z = (accuracy-mean_)/sd_)
+  #left_join(grand_mean) %>% 
+  mutate(mean_ = grand_mean$mean_,
+         sd_ = grand_mean$sd_,
+         accuracy_z = (accuracy-mean_)/sd_)
+
+TDF2024 = read_csv('outputs/brute_force_2_with_frequency/summaries.csv') %>% 
+  pivot_longer(cols = accuracy_train:mse_holdout, names_to = "variable", values_to = "value") %>% 
+  mutate(condition = case_when(str_detect(variable, "train") ~ "train",
+                               str_detect(variable, "test") ~ "test",
+                               str_detect(variable, "holdout") ~ "holdout"),
+         metric = str_split(variable, "_", simplify = T)[,1]) %>% 
+  select(-variable)
+
+TDF2024 = TDF2024 %>% 
+  left_join(TDF2024 %>% 
+              group_by(metric) %>% 
+              summarise(M = mean(value),
+                        SD = sd(value))) %>% 
+  mutate(value_z = (value-M)/SD)
+  
 
 ```
+
+# Plot 1
+Differences between 20 hidden unit and 100 hidden unit conditions in terms of standardized accuracy
 
 
 ```{r}
 TDF2024 %>% 
-  filter(hidden %in% c(20, 100)) %>% 
-  ggplot(aes(factor(hidden), accuracy_z)) +
-  geom_violin() +
-  facet_wrap(vars(variable))
+  filter(metric == "accuracy") %>% 
+  ggplot(aes(factor(hidden_units), value_z)) +
+  geom_violin(aes(fill = factor(hidden_units))) +
+  #geom_jitter(width = .02, height = .02, color = "grey66", size = .05) +
+  geom_boxplot(width = .3, outlier.shape = NA) +
+  facet_wrap(vars(condition)) +
+  theme_apa() +
+  labs(x = "Hidden units", y = "Accuracy standardized (one point per model)", fill = "Hidden units") +
+  scale_fill_manual(values = c("firebrick4", "goldenrod3"))
 
 
 ```
+
+## Mean differences
+
+
+```{r}
+
+TDF2024 %>% 
+  filter(hidden %in% c(20, 100)) %>% 
+  group_by(variable, hidden) %>% 
+  summarise(mean_within = mean(accuracy_z)) %>% 
+  mutate(accuracy_z_difference = min_ - max_)
+
+
+
+
+
+```
+
+
 
 ## Min max differences
 
@@ -50,3 +92,18 @@ TDF2024 %>%
 
 ```
 
+Descriptives, raw
+
+```{r}
+TDF2024 %>% 
+  group_by(hidden, variable) %>% 
+  summarise(M = mean(accuracy)) %>% 
+  filter(variable == "train")
+
+
+TDF2024 %>% 
+  select(-accuracy_z, -mean_, -sd_) %>% 
+  write_csv('~/Desktop/the_words_matter_subset_long.csv')
+
+
+```
