@@ -1,0 +1,47 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+## Read in longitudinal data of 10 best and 10 worst
+```{r read2}
+## see TDF2024 for munge
+
+```
+
+These rely on the SSSR2024 data - see that notebook for support.
+
+
+## Longitudinal runs of top and bottom performers
+
+Here is the plot showing variation across samples across all epochs.
+
+```{r longitudinal_plot1}
+top_bottom_20 %>% 
+  filter(train == 1) %>% 
+  group_by(condition, hidden_units, model_id, epoch) %>% 
+  summarise(acc = mean(accuracy_z)) %>% 
+  ggplot(aes(epoch, acc, group = model_id, color = factor(model_id))) +
+  geom_smooth() +
+  facet_grid(rows = vars(hidden_units), cols = vars(condition))
+
+```
+
+```{r}
+
+
+top_bottom_20 %>% 
+  filter(epoch == max(top_bottom_20$epoch)) %>% 
+  group_by(condition, hidden_units, model_id) %>% 
+  summarise(acc = mean(accuracy_z)) %>% 
+  ggplot(aes(condition, acc)) +
+  geom_bar(stat = "summary") +
+  geom_point(position = position_jitter(width = .1)) +
+  facet_wrap(vars(hidden_units)) +
+  theme_apa()
+
+```
+
