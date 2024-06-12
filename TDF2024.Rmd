@@ -11,7 +11,9 @@ require(tidyverse)
 require(papaja)
 require(RColorBrewer)
 require(tools)
+```
 
+```{r read, include=FALSE}
 top_bottom_20_ids = read_csv('data/top_and_bottom_20_learners_10_and_100_hidden_units.csv') %>% 
   distinct(model_id) %>% 
   pull(model_id)
@@ -103,6 +105,7 @@ top_bottom_20 = top_bottom_20 %>%
          SD = msd$SD,
          accuracy_z = (accuracy-M)/SD)
 
+
 ```
 
 
@@ -110,61 +113,192 @@ top_bottom_20 = top_bottom_20 %>%
 # Plot 1
 Differences between 20 hidden unit and 100 hidden unit conditions in terms of standardized accuracy
 ```{r}
-TDF2024 %>% 
+
+
+plot_1 = TDF2024 %>% 
   filter(hidden_units %in% c(10, 40, 70, 100)) %>% 
   filter(metric == "accuracy") %>% 
   mutate(Condition = toTitleCase(condition)) %>% 
   filter(Condition %in% c("Holdout", "Train")) %>% 
+  mutate(Condition = as.factor(Condition)) %>% 
+  mutate(Condition = fct_relevel(Condition, "Train", "Holdout")) %>% 
   ggplot(aes(factor(hidden_units), value_z)) +
   geom_violin(aes(fill = factor(hidden_units))) +
   geom_boxplot(width = .3, outlier.shape = NA) +
   facet_wrap(vars(Condition)) +
   theme_apa() +
-  labs(x = "Representational capacity (in hidden units)", y = "Accuracy standardized (one point per model)", fill = "Hidden units") +
-  scale_fill_brewer(palette = "Spectral")
+  labs(title = "Differences in learning of ensembles of words across learners with different skill",
+       x = "Representational capacity (in hidden units)", 
+       y = "Accuracy standardized (one point per model)", fill = "Hidden units") +
+  scale_fill_brewer(palette = "Spectral") +
+  theme(legend.position = "none",
+        axis.title = element_text(size = 28),
+        axis.text = element_text(size = 22),
+        strip.text = element_text(size = 28),
+        plot.title = element_text(size = 30))
+
+plot_1
+ggsave("plot_1.png", plot = plot_1)
 
 ```
 
+## Plot 2
 Magnitude of differences between best and worst performers across hidden units.
 
 ```{r}
-TDF2024 %>% 
+# compute the differences so we can use them for plot 2a
+plot_2b_data =  TDF2024 %>% 
+  filter(hidden_units %in% c(10, 100)) %>% 
+  filter(metric == "accuracy") %>%
+  group_by(hidden_units, model_id) %>%
+  summarise(acc = mean(value_z)) %>% 
+  arrange(desc(acc)) %>% 
+  mutate(acc_rank = seq_len(n())) %>% 
+  ungroup() %>%
+  group_by(model_id) %>%
+  arrange(-desc(hidden_units)) %>% 
+  summarize(difference = diff(acc_rank))
+
+
+plot_2a_alt = TDF2024 %>% 
   filter(hidden_units %in% c(10, 40, 70, 100)) %>% 
   filter(metric == "accuracy") %>% 
   mutate(Condition = toTitleCase(condition)) %>% 
-  filter(Condition %in% c("Holdout", "Train")) %>% 
-  group_by(Condition, hidden_units) %>% 
+  filter(Condition %in% c("Train")) %>% 
+  group_by(hidden_units) %>% 
   summarise(acc_min = min(value_z),
-            acc_max = max(value_z)) %>% 
+            acc_max = max(value_z)) %>%
   ungroup() %>% 
   mutate(acc_diff = acc_max - acc_min) %>% 
   ggplot(aes(factor(hidden_units), acc_diff, fill = factor(hidden_units))) +
   geom_bar(stat = "identity", color = "black") +
-  facet_wrap(vars(Condition)) +
   theme_apa() +
-  labs(x = "Representational capacity (in hidden units)", y = "Difference in achievement of highest and lowest performers", fill = "Hidden units") +
-  scale_fill_brewer(palette = "Spectral")
+  labs(title = "Differences in learning extremes at each level of hidden units",
+       x = "Representational capacity (in hidden units)", 
+       y = "Difference between highest + lowest learner (in SD units) ", 
+       fill = "Hidden units") +
+  scale_fill_brewer(palette = "Spectral") +
+  theme(legend.position = "none",
+        axis.title = element_text(size = 28),
+        axis.text = element_text(size = 22),
+        strip.text = element_text(size = 28),
+        plot.title = element_text(size = 30))
 
+plot_2a = TDF2024 %>% 
+  filter(hidden_units %in% c(10, 100)) %>% 
+  filter(metric == "accuracy") %>% 
+  mutate(Condition = toTitleCase(condition)) %>% 
+  group_by(hidden_units, model_id) %>% 
+  summarise(acc = mean(value_z)) %>%
+  left_join(plot_2b_data, by = "model_id") %>% 
+  ggplot(aes(factor(hidden_units), acc)) + #, fill = factor(hidden_units)
+  geom_line(size = .05, aes(group = model_id, color = difference)) +
+  geom_violin(aes(fill = factor(hidden_units))) +
+  geom_boxplot(width = .2) +
+  theme_apa() +
+  labs(title = "Differences in learning at 10, 100 hidden units",
+       x = "Representational capacity (in hidden units)", 
+       y = "Accuracy (in SDs - one point per model)", 
+       fill = "Hidden units") +
+  scale_fill_manual(values = c("firebrick", "#0072B2")) +
+  scale_color_gradientn(colors = heat.colors(10)) +
+  theme(legend.position = "none",
+        axis.title.x = element_text(size = 28),
+        axis.title.y = element_text(size = 24),
+        axis.text = element_text(size = 22),
+        strip.text = element_text(size = 28),
+        plot.title = element_text(size = 32))
+
+plot_2a
+ggsave("plot_2a.png", plot = plot_2a)
+
+
+
+
+
+plot_2b = plot_2b_data %>% 
+  ggplot(aes(difference)) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "grey60") +
+  geom_density(size = 1, color = "brown4") +
+  geom_vline(xintercept = mean(plot_2b_data$difference), linetype = "dashed") +
+  theme_apa() +
+  theme(legend.position = "none") +
+  labs(title = "Differences in rank accuracy per model", subtitle = "(10 v. 100 hidden unit models)",
+       x = "Difference in rank",
+    y = "Density") +
+  theme(legend.position = "none",
+        axis.title = element_text(size = 28),
+        axis.text = element_text(size = 22),
+        strip.text = element_text(size = 28),
+        plot.title = element_text(size = 30),
+        plot.subtitle = element_text(size = 28))
+
+plot_2b
+ggsave("plot_2b.png", plot = plot_2b)
 ```
 
+
+
+
+## Plot 3a + 3b
 Variation of words in holdout.
 
 ```{r}
-top_bottom_20 %>% 
+COLORS = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+plot_3a = top_bottom_20 %>% 
   filter(holdout == 1) %>% 
   filter(epoch == 49) %>% 
   group_by(hidden_units, word) %>% 
   summarise(acc = mean(accuracy_z)) %>% 
   ggplot(aes(factor(hidden_units), acc, color = factor(hidden_units), group = word)) +
-  geom_line(color = "grey44", alpha = .2) +
-  geom_point(position = position_jitter(width = .05)) +
+  geom_line(color = "grey44", alpha = .4) +
+  geom_point(position = position_jitter(width = .03)) +
   theme_apa() +
     theme(legend.position = "none") +
-  labs(x = "Representational capacity (low - high)",
+  labs(title = "Accuracy across two levels of hidden units",
+       x = "Representational capacity (low - high)",
     y = "Accuracy standardized (per word)") +
-  scale_color_manual(values = c("firebrick4", "goldenrod3"))
+  scale_color_manual(values = c("firebrick", "#0072B2")) +
+  theme(legend.position = "none",
+        axis.title = element_text(size = 28),
+        axis.text = element_text(size = 22),
+        plot.title = element_text(size = 30))
+
+plot_3a
+ggsave(filename = "plot_3a.png", plot = plot_3a)
+
+plot_3b_data = top_bottom_20 %>% 
+  filter(holdout == 1) %>% 
+  filter(epoch == 49) %>% 
+  group_by(hidden_units, word) %>% 
+  summarise(acc = mean(accuracy_z)) %>% 
+  arrange(desc(acc)) %>% 
+  mutate(acc_rank = seq_len(n())) %>% 
+  ungroup() %>% 
+  group_by(word) %>%
+  arrange(-desc(hidden_units)) %>% 
+  summarize(difference = diff(acc_rank))
+
+plot_3b = plot_3b_data %>% 
+  ggplot(aes(difference)) +
+  geom_histogram(aes(y = ..density..), color = "black", fill = "grey44") +
+  geom_density(color = "brown4", size = 1) + 
+  geom_vline(xintercept = mean(plot_3b_data$difference), linetype = "dashed") +
+  theme_apa() +
+  theme(legend.position = "none") +
+  labs(title = "Differences in rank accuracy per word", subtitle = "(10 v. 100 hidden unit models)",
+       x = "Difference in rank",
+    y = "Density") +
+  theme(legend.position = "none",
+        axis.title = element_text(size = 28),
+        axis.text = element_text(size = 22),
+        plot.title = element_text(size = 30),
+        plot.subtitle = element_text(size = 28))
 
 
+plot_3b
+ggsave(filename = "plot_3b.png", plot = plot_3b)
 
 ```
 
@@ -216,14 +350,6 @@ TDF2024 %>%
 
 ## For abstract
 ### Mean differences
-```{r}
-TDF2024 %>% 
-  filter(hidden %in% c(20, 100)) %>% 
-  group_by(variable, hidden) %>% 
-  summarise(mean_within = mean(accuracy_z)) %>% 
-  mutate(accuracy_z_difference = min_ - max_)
-```
-
 
 
 ### Min max differences
@@ -231,10 +357,10 @@ TDF2024 %>%
 ```{r}
 
 TDF2024 %>% 
-  filter(hidden %in% c(20, 100)) %>% 
-  group_by(variable, hidden) %>% 
-  summarise(min_ = min(accuracy_z),
-            max_ = max(accuracy_z)) %>% 
+  filter(hidden_units %in% c(10, 100)) %>% 
+  group_by(metric, hidden_units) %>% 
+  summarise(min_ = min(value_z),
+            max_ = max(value_z)) %>% 
   mutate(accuracy_z_difference = min_ - max_)
 
 
@@ -243,9 +369,9 @@ TDF2024 %>%
 ### Descriptives, raw
 ```{r}
 TDF2024 %>% 
-  group_by(hidden, variable) %>% 
-  summarise(M = mean(accuracy)) %>% 
-  filter(variable == "train")
+  group_by(hidden_units, condition, metric) %>% 
+  summarise(M = mean(value)) %>% 
+  filter(condition == "train")
 
 
 TDF2024 %>% 
