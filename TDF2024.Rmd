@@ -95,6 +95,8 @@ TDF2024 = TDF2024 %>%
                         SD = sd(value))) %>% 
   mutate(value_z = (value-M)/SD)
   
+
+
 msd = TDF2024 %>% 
     filter(metric == "accuracy") %>% 
     summarise(M = mean(value),
@@ -106,6 +108,7 @@ top_bottom_20 = top_bottom_20 %>%
          accuracy_z = (accuracy-M)/SD)
 
 
+
 ```
 
 
@@ -113,8 +116,6 @@ top_bottom_20 = top_bottom_20 %>%
 # Plot 1
 Differences between 20 hidden unit and 100 hidden unit conditions in terms of standardized accuracy
 ```{r}
-
-
 plot_1 = TDF2024 %>% 
   filter(hidden_units %in% c(10, 40, 70, 100)) %>% 
   filter(metric == "accuracy") %>% 
@@ -238,6 +239,36 @@ ggsave("plot_2b.png", plot = plot_2b)
 ```
 
 
+## Correlations between 10 and 100, extension of plot 2
+
+```{r}
+
+TDF2024 %>% 
+  filter(hidden_units %in% c(10, 100)) %>% 
+  filter(metric == "accuracy") %>% 
+  #filter(condition != "test") %>% 
+  group_by(hidden_units, model_id) %>% 
+  summarise(acc = mean(value_z)) %>% 
+  pivot_wider(names_from = hidden_units, values_from = acc) %>% 
+  rename(hu10 = `10`, hu100 = `100`) %>% 
+  summarise(cor(hu10, hu100))
+
+
+TDF2024 %>% 
+  filter(hidden_units %in% c(10, 100)) %>% 
+  filter(metric == "accuracy") %>% 
+  #filter(condition != "test") %>% 
+  group_by(hidden_units, model_id) %>% 
+  summarise(acc = mean(value_z)) %>% 
+  pivot_wider(names_from = hidden_units, values_from = acc) %>% 
+  rename(hu10 = `10`, hu100 = `100`) %>% 
+  ggplot(aes(hu10, hu100)) +
+  geom_point() +
+  geom_smooth() +
+  theme_apa()
+
+
+```
 
 
 ## Plot 3a + 3b
@@ -346,6 +377,24 @@ TDF2024 %>%
   scale_color_brewer(palette = "Set2")
 
 ```
+
+# Best ensembles across train, test, holdout
+
+```{r}
+
+TDF2024 %>% 
+  filter(metric == "accuracy") %>%
+  group_by(condition, model_id) %>% 
+  summarise(acc = mean(value_z)) %>% 
+  ggplot(aes(acc)) +
+  geom_histogram(color = "black") +
+  theme_apa() +
+  facet_wrap(vars(condition))
+
+```
+
+
+
 
 
 ## For abstract
