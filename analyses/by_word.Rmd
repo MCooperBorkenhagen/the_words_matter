@@ -1,0 +1,35 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-04-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+
+PATH = '../outputs/brute_force_2/'
+words = read_csv('../data/kidwords/kidwords.csv', col_names = 'word')
+
+filenames = list.files(PATH, pattern = "accuracies\\.csv$")
+
+dl <- lapply(filenames, function(x) {
+  read_csv(file.path(PATH, x), col_names = F)
+})
+
+
+start = Sys.time()
+for (filename in filenames[1:1000]){
+  
+  model_id = str_extract(filename, "(?<=sample_)[0-9]+(?=_hidden)")
+  tmp = read_csv(str_c(PATH, filename), col_names = F) %>% 
+    mutate(model_id = model_id,
+           word = words$word)
+  
+  
+  
+}
+
+end = Sys.time()-start
+
+```

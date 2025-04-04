@@ -74,7 +74,8 @@ def batch_accuracy(Y, Y_hat, theta=0.5, dichotomous=True):
 
 
 def learner(X, Y, seed, hidden, optimizer=None):
-    keras.utils.set_random_seed(seed)
+
+    tf.random.set_seed(seed)
 
     if optimizer is None:
         optimizer = 'adam' # Adam(learning_rate=learning_rate) # was originally .1
