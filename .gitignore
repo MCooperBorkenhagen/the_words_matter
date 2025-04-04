@@ -11,3 +11,5 @@ tmp.*
 *.tiff
 
 .DS_Store
+*.pptx
+*.pdf
