@@ -8,3 +8,8 @@ outputs/
 tmp.*
 .vscode/
 *.html
+*.tiff
+
+.DS_Store
+*.pptx
+*.pdf

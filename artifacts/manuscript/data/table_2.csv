@@ -1,0 +1,6 @@
+﻿Spelling,Pronunciation,Diff. features,Diff. MSE Raw,Diff. MSE Z-score,Accuracy
+breathed,briDd,–,0,0,1
+breathg,briDg,1,0.0038,0.01,0.996
+breazg,brizg,2,0.0076,0.02,0.992
+broozg,bruzg,3,0.0115,0.03,0.99
+bruised,bruzd,4,0.0153,0.04,0.985
