@@ -1,0 +1,33 @@
+For writing into markdown:
+y-hat reference
+OSF note
+anonymization
+chi-squared latex
+
+
+
+Long form of abstract:
+The development of early word reading skills fundamentally depends on children's interactions with printed words. 
+A vast amount of research in the psychological and educational sciences has been conducted on the learning processes
+that contribute to skilled word recognition in children and adults. However, little is known about how ensembles of 
+words encountered during early learning affect learning outcomes over timescales larger than what can be accomplished 
+in a controlled experimental setting. This is for good reason: the types of experimental and inferential methods for 
+examining causal effects in this knowledge domain can realistically only happen at small timescales using relatively 
+few learning trials of printed words. In order to move past this limitation, and using an established connectionist 
+learning architecture (Plaut, McClelland, Seidenberg, & Patterson, 1996; Seidenberg & McClelland, 1989), we examined 
+how variation in word ensembles influence word recognition and generalization during early reading acquisition. Computational 
+models simulated learners exposed to different sets of monosyllabic printed words drawn randomly from children’s literature 
+at a large scale (*n* = 10,000). In order to examine how different ensembles might impact learning (and generalization) 
+depending on the learner's ability to represent the relationship between letters and sounds (a critical skill underpinning
+reading development), we also manipulated the representational capacity of models by systematically changing the number 
+of hidden units of models, holding the ensemble of words constant. Across levels of representational capacity each model 
+(defined as the ensemble of words selected for learning) had twin models which differed only in terms of the number of 
+hidden units they possessed. Results demonstrated significant variation in learning outcomes in a set of generalization 
+words as a function of the specific word ensemble and number of hidden units. Word recognition accuracy and generalization 
+to novel words varied notably with different training sets. Furthermore, representational capacity modulated these 
+effects; lower-capacity models exhibited greater variability and poorer performance. These findings indicate that an 
+important determinant to learning to read is the nature of the printed word learning environment, and effect that has 
+not been found in the behavioral literature in large-scale studies of learning. Additionally, results suggest that special 
+consideration should be paid to learners with limited capacity to map printed words to their spoken form, such as those 
+with dyslexia, and that ensembles of experiences for such learners should be carefully curated based on their needs. These 
+findings inform educational practices by highlighting the importance of deliberate word selection to support early development.

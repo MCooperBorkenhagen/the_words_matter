@@ -1,0 +1,122 @@
+---
+title: "LMEM"
+output: html_document
+date: "2025-04-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# Call libraries
+library(lattice)
+library(Matrix)
+library(lme4)
+#library(MASS)
+library(tidyverse)
+library(lmerTest)
+library(conflicted)
+
+
+
+conflicts_prefer(dplyr::select)
+conflicts_prefer(dplyr::filter)
+conflicts_prefer(lme4::lmer)
+
+
+# control options of LMEM
+# ftol_abs = 1e-8, xtol_abs = 1e-8, 
+
+## fit models 1-2 with: rhobeg = 2e-3, rhoend = 2e-7
+control = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 5e6, rhobeg = .1, rhoend = 2e-9))
+
+# data
+
+
+
+twm = read_csv("data/subset_data_for_lmem_v2.csv") %>% 
+  filter(holdout == TRUE) %>% 
+  filter(hidden %in% c(20, 30, 40)) %>%
+  glimpse() %>% 
+  mutate(mse_z = (mse-mean(mse))/sd(mse)) 
+
+stopifnot(all(twm$holdout)) # should be holdout items only
+
+```
+
+# Linear Mixed Effects Models
+
+## Statistical Model 1: Unconditional Model A
+Here we have our unconditional without model_id (nested within unconditional)
+```{r StatisticalModel1}
+uncon_no_model_id = lmer(mse_z ~ 1 + (1 | word), data = twm, control = control)
+summary(uncon_no_model_id)
+```
+
+
+## Statistical Model 2: Unconditional Model B
+This is the unconditional model (nested within main_no_hidden_slopes)
+```{r StatisticalModel2}
+
+uncon = lmer(mse_z ~ 1 + (1 | model_id) + (1 | word), data = twm, control = control)
+
+uncon = lmer(mse_z ~ 1 + (1 | model_id) + (1 | word), data = twm)
+uncon_allfits = allFit(uncon)
+
+summary(uncon)
+
+```
+
+
+## Statistical Model 3: Main Model No Slopes
+This is the main model without any slopes (nested within model_revised)
+
+```{r StatisticalModel3}
+# 
+CONTROL = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 5e6, rhobeg = .1, rhoend = 2e-9))
+main_no_hidden_slopes = twm %>% 
+  mutate(hidden = hidden/10) %>% 
+  lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL)
+
+summary(main_no_hidden_slopes)
+
+
+```
+
+
+## Statistical Model 4: Main Model No Hidden Slope on Ensemble
+This is the main model without hidden slope on model_id (nested within main)
+
+```{r StatisticalModel4}
+main_revised = twm %>% 
+  mutate(hidden = hidden/10) %>% 
+  lmer(mse_z ~ 1 + hidden + (1 |model_id) + (1 + hidden | word), data = ., control = CONTROL)
+
+summary(main_revised)
+```
+
+
+## Statistical Model 5: Full Model
+The main model (full model)
+
+```{r StatisticalModel5}
+
+
+main = twm %>% 
+  mutate(hidden = hidden/10) %>% 
+  lmer(mse_z ~ 1 + factor(hidden) + (1 + hidden | model_id) + (1 + hidden | word), data = ., control = CONTROL)
+
+summary(main)
+
+```
+
+
+
+```{r significanceTests}
+anova(uncon_no_model_id, uncon) # is model_id necessary? (Does performance vary based on ensemble?)
+anova(uncon, main_no_hidden_slopes) # is fixed effect of hidden necessary? (Does representational capacity affect MSE?)
+anova(main_no_hidden_slopes, main_revised) # is hidden slope on word necessary? (Does the word variability change based on representational capacity?)
+anova(main, main_revised) # is hidden slope on model_id necessary? (Does the ensemble variability change based on representational capacity?)
+
+```
+
