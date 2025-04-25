@@ -103,9 +103,11 @@ The main model (full model)
 
 
 main = twm %>% 
-  mutate(hidden = hidden/10) %>% 
-  lmer(mse_z ~ 1 + factor(hidden) + (1 + hidden | model_id) + (1 + hidden | word), data = ., control = CONTROL)
+  mutate(hidden = hidden/1000) %>% 
+  lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id) + (1 + hidden | word), data = ., control = CONTROL)
 
+
+save(main, file = "main_model.RData")
 summary(main)
 
 ```
