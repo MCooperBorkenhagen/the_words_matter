@@ -113,6 +113,77 @@ summary(main)
 ```
 
 
+```{r}
+
+iterations = 20
+models = list()
+
+for (iter in seq(iterations)){
+  
+  extra = twm %>% 
+  #mutate(hidden = hidden) %>% 
+  lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id/word), data = ., control = CONTROL)
+  
+  id = paste("model_", iter, sep = "")
+  models[[id]] = extra
+  
+}
+
+for (m in models){
+  
+  print(summary(m))
+  
+  
+}
+summary(extra)
+
+
+
+
+```
+
+## Crossed
+```{r}
+
+iterations = 5
+models_main = list()
+
+for (iter in seq(iterations)){
+  
+  extra_ = twm %>% 
+    mutate(hidden = hidden/10000) %>% 
+    lmer(mse_z ~ 1 + hidden + (1 + hidden || model_id) + (1 + hidden || word), data = ., control = CONTROL)
+  
+  print(paste("Iteration", iter, "done"))
+  id = paste("model_", iter, sep = "")
+  models_main[[id]] = extra_
+  
+}
+
+for (m in models_main){
+  
+  print(summary(m))
+  
+  
+}
+
+summary(extra_)
+
+
+
+```
+
+### One last try but with correlations of random effects
+
+
+```{r}
+extra_2 = twm %>% 
+    mutate(hidden = hidden/10000) %>% 
+    lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id) + (1 + hidden | word), data = ., control = CONTROL)
+
+
+```
+
 
 ```{r significanceTests}
 anova(uncon_no_model_id, uncon) # is model_id necessary? (Does performance vary based on ensemble?)
