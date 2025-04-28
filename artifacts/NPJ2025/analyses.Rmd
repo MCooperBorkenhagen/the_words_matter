@@ -16,7 +16,7 @@ library(broom)
 ```
 
 ```{r data, include=FALSE}
-words = read_csv('data/kidwords.csv', col_names = c('word'))
+words = read_csv('../../data/kidwords/kidwords.csv', col_names = c('word'))
 
 # model summaries
 model_summaries = read_csv('data/model_summaries.csv') %>% 
@@ -32,7 +32,7 @@ model_summaries = read_csv('data/model_summaries.csv') %>%
 
 model_summaries = model_summaries %>% 
   left_join(model_summaries %>% 
-              group_by(metric) %>% 
+              group_by(condition, metric) %>% 
               summarise(M = mean(value),
                         SD = sd(value))) %>% 
   mutate(value_z = (value-M)/SD)
@@ -130,6 +130,8 @@ plot = model_summaries %>%
   scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
   scale_fill_manual(values = c("goldenrod3", "firebrick4"))
 
+
+plot
 ggsave("img/results_figure2.png", plot = plot, width = 5, height = 4, dpi = 600)
 
 ```
@@ -178,6 +180,7 @@ plot = model_summaries %>%
        y = "Mean squared error (Z)") +
   scale_fill_manual(values = c("Train.20" = "lightgoldenrod", "Train.30" = "goldenrod3", "Train.40" = "orange", "Generalization.20" = "lightcoral", "Generalization.30" = "firebrick4", "Generalization.40" = "deeppink4"))
 
+plot
 ggsave("img/results_figure3.png", plot = plot, width = 5, height = 4, dpi = 600)
 
 
