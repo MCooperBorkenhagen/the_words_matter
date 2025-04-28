@@ -15,5 +15,12 @@ tmp.*
 *.pdf
 *.docx
 
+*.RData
+*.RProj
+
+*.tex
+
+
+subset_data_for_lmem_v2.csv
 artifacts/NPJ2025/data/subset_data_for_lmem_v2.csv 
 artifacts/NPJ2025/data/subset_data_for_lmem.csv 

@@ -64,28 +64,14 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
 % Make \paragraph and \subparagraph free-standing
-\makeatletter
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
-  \renewcommand{\paragraph}{
-    \@ifstar
-      \xxxParagraphStar
-      \xxxParagraphNoStar
-  }
-  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
-  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
 \fi
 \ifx\subparagraph\undefined\else
   \let\oldsubparagraph\subparagraph
-  \renewcommand{\subparagraph}{
-    \@ifstar
-      \xxxSubParagraphStar
-      \xxxSubParagraphNoStar
-  }
-  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
-  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
-\makeatother
 \ifLuaTeX
 \usepackage[bidi=basic]{babel}
 \else
@@ -155,11 +141,10 @@
 \makeatletter
 \xapptocmd\appendix
   {\xapptocmd\section
-    {\addcontentsline{toc}{section}{\appendixname\ifoneappendix\else~\theappendix\fi: #1}}
+    {\addcontentsline{toc}{section}{\appendixname\ifoneappendix\else~\theappendix\fi\\: #1}}
     {}{\InnerPatchFailed}%
   }
 {}{\PatchFailed}
-\makeatother
 \keywords{Reading development · learning to read · environmental factors · connectionism\newline\indent Word count: 6,003 words}
 \usepackage{lineno}
 
@@ -198,7 +183,7 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-\usepackage{bookmark}
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 \hypersetup{
@@ -233,7 +218,8 @@ The development of early word reading skills fundamentally depends on children's
 \begin{document}
 \maketitle
 
-\section{Introduction}\label{introduction}
+\hypertarget{introduction}{%
+\section{Introduction}\label{introduction}}
 
 By the time a child becomes a proficient reader, they have encountered thousands of distinct words. Each encounter exposes them to properties of print that provide the basis for learning and generalization. Early in development the critical properties primarily concern letters and sounds and their patterns of co-occurrence across words (Castles, Rastle, \& Nation, 2019; Seidenberg \& MacDonald, 2019). Due to a variety of factors including genetics, disability, instruction, and exposure to print, among others (Connor, Morrison, \& Katch, 2004; Cunningham \& Stanovich, 1993; Cunningham \& Stanovich, 2013; Gayan \& Olson, 2003; Peterson \& Pennington, 2015) children vary in their visual word recognition skills. The set of printed words that constitutes the child's learning environment (e.g., through reading aloud printed words independently or with others) is thought to be an additional factor that influence outcomes. Indirect evidence for this can be found in experimental studies with highly controlled training environments: Children perform differently on words with different properties (e.g., length, regularity, consistency; Seidenberg et al., 1984) and differ in their choice of pronunciation for ambiguous test items (e.g., zead) after rehearsal on different practice items (e.g., heat and zeal or bread and head; Apfelbaum, Hazeltine, \& McMurray, 2013). Learning studies have shown that even with limited exposure (even in absence of instruction) children are able to bootstrap their existing knowledge of letters and sounds to retain information about the identities of specific novel words to which they were previously exposed (Cunningham, Perry, Stanovich, \& Share, 2002; Nation, Angell, \& Castles, 2007). However, in studies that involve learning, less consideration is given to the variability in children's performance vis-a-vis the exposure to words over a longer developmental span (i.e., over the course of early reading acquisition) and in generalization performance.
 
@@ -243,11 +229,13 @@ As a proxy for learning about the properties of words that support learning and 
 
 Importantly, these (and other) instructional theories employ different ideas about the types of experiences young readers should have with printed words on their way to skilled reading. Is it important to organize experiences in a way that privileges some words over others? This question motivates the current study. We consider whether word-recognition performance varies depending on the particular words students learn, i.e., the ensemble of words that comprises the child's print learning environment.
 
-\subsection{Difficult Phenomena to Study}\label{difficult-phenomena-to-study}
+\hypertarget{difficult-phenomena-to-study}{%
+\subsection{Difficult Phenomena to Study}\label{difficult-phenomena-to-study}}
 
 Answering this question has consequences for theories of reading acquisition and approaches to early reading instruction. Unfortunately, measuring the relative impacts of different ensembles of printed words is difficult because learning to read words aloud happens gradually over a wide developmental timescale, encompassing many learning trials distributed across many experiences with different words. This gradual process is difficult to capture with traditional experimentation given the challenges associated with controlling the learning environment for developing children at a large scale. Learning studies like those mentioned previously are designed to examine learning at a causal level using narrowly constructed learning experiments in a laboratory setting where factors can be carefully controlled (typically using nonwords to avoid confounds of familiarity with stimuli). Additionally, typical behavioral assessments cannot measure subtle differences in word reading performance (e.g., whether a given pronunciation includes minor imprecisions) or variation beyond the few items they include.
 
-\subsection{The Connectionist Approach}\label{the-connectionist-approach}
+\hypertarget{the-connectionist-approach}{%
+\subsection{The Connectionist Approach}\label{the-connectionist-approach}}
 
 One way to assess acquisition and performance of this kind is to use simulations. Connectionism offers a robust set of tools to investigate these learning questions given the established success of connectionist models of human cognition (McClelland, Botvinick, Noelle, Plaut, Rogers, Seidenberg, \& Smith, 2011). The paradigm has been used to model learning to read (Plaut, 2005; Seidenberg, Farry-Thorn, \& Zevin, 2022); simulated learners have similar patterns of performance accuracy and response time as humans on word-reading measures. An important advantage (especially related to the current project) is the large scale at which connectionist models can be deployed in simulating environment effects on learning (see Cox, Cooper Borkenhagen, \& Seidenberg, 2019 for an example). In the approach taken here, a series of models that simulate early print learning (naming a word based on its printed form) represents a large sample of learners, each trained with a different ensemble of words, each of which comprises 300 words randomly selected from a text corpus. Given that the models differ only with respect to their learning environment (i.e., the ensemble on which it is trained), differences in learning outcomes can be causally attributed to variation in the environment. Thus, observed differences in model performance after training provide evidence that the specific words encountered influence learning outcomes.
 
@@ -257,15 +245,18 @@ Measuring the relative impact of words on later reading performance is challengi
 
 The simulation approach used here addresses this challenge by enabling precise experimental control around the capacities of the (simulated) learners and the learning environment to which learners are exposed. It allows us to (a) examine the performance of an identical learner across different word ensembles and (b) compare learners with systematically varied characteristics (e.g., representational capacity) on the same word ensemble. In the experiments reported here, we do both simultaneously in order to examine the extent to which the words matter for early print development outcomes for learners that vary in terms of their ability to represent print-speech mappings.
 
-\subsection{Questions}\label{questions}
+\hypertarget{questions}{%
+\subsection{Questions}\label{questions}}
 
 Our general question is whether the different ensembles of words learned during early reading acquisition contributed to different word reading outcomes. We investigate this with three specific questions. First, to what extent is there variation in learning as a function of exposure to ensembles of different training items? Second, to what extent is there variation in learning as evidenced in transfer effects to untaught words? Finally, is the effect of the training environment modulated by the capacity of the learner to represent the mappings between phonology and orthography?
 
 Regarding questions one and two, we anticipate that there will be wide variation in performance on the words learned, and that this variation would also be evidenced in generalization items at the end of learning. With regard to question three, variability in the ensemble effect based on learning capacity, in general we expected for models with reduced representational capacity to perform more poorly and with greater variability than their high-capacity counterparts. We expected this increase in variation because we anticipate that learners with diminished capacity to map print to speech would benefit more from ensembles that, in general, confer better (more generalizable) print-speech structure.
 
-\section{Methods}\label{methods}
+\hypertarget{methods}{%
+\section{Methods}\label{methods}}
 
-\subsection{Word Data}\label{word-data}
+\hypertarget{word-data}{%
+\subsection{Word Data}\label{word-data}}
 
 Monosyllabic words (\(N\) = 2,869) were collected from popular children's books, taken from the corpus developed in Lewis et al.~(2021). All monosyllabic words from the Lewis et al.~(2021) corpus comprised the pool of words from which training and generalization items were sampled. Learning was weighted by frequency such that during each learning trial the error signal associated with any word presented to the model was proportional to its frequency as established in the Hypertext Analog of Language corpus (Lund \& Burgess, 1996; accessed through data from English Lexicon Project, see Balota et al., 2007)\footnote{See appendix for a technical description of how the scaling is accomplished.}. All words participating in the simulations were monosyllabic. Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, \(F\)(1, 2868) = 3.38, \(p\) = .07; phonemes, \(F\)(1, 2774) = 3.25, \(p\) = .07; frequency \(F\)(1, 2773) = 1.08, \(p\) = .30.
 
@@ -298,11 +289,13 @@ Frequency & 8.76 & 2.15 & 3.87 & 16.19 & 8.88 & 2.08 & 0.00 & 16.96\\
 
 \end{table}
 
-\subsection{Training and Holdout Item Sets}\label{training-and-holdout-item-sets}
+\hypertarget{training-and-holdout-item-sets}{%
+\subsection{Training and Holdout Item Sets}\label{training-and-holdout-item-sets}}
 
 Models learned 300 words across 50 learning trials (epochs) and were all tested on the same independent set of 300 holdout words in order to examine generalization. This number of epochs was chosen because testing different configurations revealed this to be a reasonable number of weight updates to achieve asymptotic performance across a large number of pilot runs and to do so in a way that could be accomplished on a short timeline (in terms of learning). Other values are also possible but yielded similar results during a pilot phase. The testing procedure is described more fully below in the ``Testing'' section.
 
-\subsection{Modeling Procedure}\label{modeling-procedure}
+\hypertarget{modeling-procedure}{%
+\subsection{Modeling Procedure}\label{modeling-procedure}}
 
 Computational models that map print to speech were used, following the procedures in other simulation work (Brown et al., 2015; Cox et al., 2019; Harm \& Seidenberg, 1999; Seidenberg \& McClelland, 1989). The model architecture used here was a feedforward network with 260 orthographic input units, 175 phonological output units, and an experimentally manipulated number of hidden units (see description of representational capacity below). Each orthographic unit has a directed, weighted connection to every hidden unit, and each hidden unit has a directed, weighted connection to every phonological unit. Every hidden and phonological unit also receives weighted input from a special unit that always has activation equal to 1 (i.e., a bias unit), which serves a similar function as the intercept term in a linear regression. The networks were all trained in ways that were consistent with other connectionist implementations of feedforward reading models (Seidenberg \& McClelland, 1989; Plaut et al., 1996). During learning weights were updated using gradient descent through the use of backpropagation. Error was calculated using binary cross entropy as the loss function (see Plaut et al., 1996 for similar simulations). Except for the number of hidden units, all other hyperparameters were decided prior to experimentation and held constant for all models. Notably, we used a batch size of 16, a learning rate of .01, and 50 training epochs. Models were implemented in Python 3.11.5 using Keras 2.12.0 with Tensorflow 2.12.0 as the backend.
 
@@ -316,17 +309,21 @@ Finally, the vectors within each slot are concatenated to form a single pair of 
 \caption{\label{fig:figure1}A depiction of the network architecture and hyperparameter values. Hyperparameters used for simulations are listed in the box labeled ``Network Structure''. See similar architectures in Plaut et al.~(1996), Simulation 1, Seidenberg \& McClelland (1989), and Cox et al.~(2019). Layers are represented with circles and boxes and arrows represent weight matrices, as in depictions of connectionist reading models elsewhere. The layers are not represented with the total number of units actually specified in models, but are simplified to preserve space in the figure.}
 \end{figure}
 
-\subsection{Representational Capacity (i.e., Hidden Units)}\label{representational-capacity-i.e.-hidden-units}
+\hypertarget{representational-capacity-i.e.-hidden-units}{%
+\subsection{Representational Capacity (i.e., Hidden Units)}\label{representational-capacity-i.e.-hidden-units}}
 
 The representational capacity of the model was manipulated by changing the number of hidden units in the network. This was done in such a way that each ensemble in one level of hidden unit has an identical ``twin'' in each other level such that the only thing that differed across them was the number of hidden units. This manipulation allowed us to test whether the effect of word set (the ensemble effect) differed based on characteristics of different models (the learner effect). The manipulation of hidden units is associated with variation found across readers given that hidden units provide the underlying capacity with which print and speech can be integrated in the model (Seidenberg \& McClelland, 1989). Models with very few hidden units fail to encode generalizable structure in the training corpus. This is particularly problematic in writing systems like English where letters and sound map together in quasiregular ways (Seidenberg et al., 2020).
 
-\subsection{Number of Training Runs}\label{number-of-training-runs}
+\hypertarget{number-of-training-runs}{%
+\subsection{Number of Training Runs}\label{number-of-training-runs}}
 
 The words selected for training and the representational capacity of each model were both manipulated. At each level of three capacity conditions (ranging from 20 to 40 hidden units) 10,000 models were run (\emph{N} = 30,000). Simulations were conducted such that for each of the 10,000 models within each level of representational capacity there was a ``twin'' model in each of the other levels. Each set of twins differed only in terms of the representational capacity they possessed, and were matched in terms of the ensemble of words and all other hyperparameters of the simulation other than hidden units (i.e., learning rate, training epochs, batch size). The capacity conditions were static across models but training items were sampled randomly from the 2,869 words in the full monosyllabic word corpus. For each training ensemble a random set of 300 words was drawn from the corpus. No two ensembles were identical. See supplement for identities of words included in the sampling process. Words were presented in the same order throughout training for all models.
 
-\subsection{Testing}\label{testing}
+\hypertarget{testing}{%
+\subsection{Testing}\label{testing}}
 
-\subsubsection{Error Metric}\label{error-metric}
+\hypertarget{error-metric}{%
+\subsubsection{Error Metric}\label{error-metric}}
 
 A primary objective of learning is a high level of achievement of the subject material. In order to assess each model's learning at the end of the training period we analyze the error associated with each model's performance on the training and holdout sets (300 words each) using mean squared error. This measure of error is common among simulation studies using connectionist models of reading because of the direct way in which error reflects processing difficulties associated with the model's ability to produce a phonological output from orthographic input (e.g., Chang, Monaghan, \& Welbourne, 2019; see also Seidenberg \& McClelland, 1989, where summed squared error was used). Mean squared error is calculated over output phonological features relative to the features for the word's target. The formula for mean squared error is shown in (1). Here, \(n\) is the number of output units (\(n\) = 175), \(y_i\) is the output of the \(i\)th unit, and \(\hat{y}_i\) is the target state for that same (\(i\)th) unit.
 
@@ -336,7 +333,8 @@ A primary objective of learning is a high level of achievement of the subject ma
 \]
 In the results section mean squared error is reported in its standardized form (standardized using all the training and test data) in order to represent variation in performance in a more concrete way (i.e.~in standard deviation units). Raw mean squared error is also provided. Given our specific interest in the effect of word ensemble during learning and generalization, error for each model is averaged across all of its training words (when measuring training outcomes) and test words (when measuring generalization).
 
-\subsection{Understanding the Error Metric}\label{understanding-the-error-metric}
+\hypertarget{understanding-the-error-metric}{%
+\subsection{Understanding the Error Metric}\label{understanding-the-error-metric}}
 
 For additional context when interpreting error results we will say a few things about the relevance of error as a measure of performance in the models reported here (and other connectionist models of reading). The output for each word is a sequence of 175 features, each representing a binary phonological feature (e.g., plosive, nasal, bilabial, etc.) within a phonological slot associated with pronunciation. We analyze results in terms of performance (error) in the output features because it allows for continuously graded data on pronunciation. Table 2 provides examples of minimal pairs of alternative pronunciations and the corresponding impact on error (raw and standardized) on output features.
 
@@ -363,13 +361,16 @@ bruised & bruzd & 4 & 0.02 & 0.04 & 0.985 \\
 
 ~
 
-\subsection{Additional Details}\label{additional-details}
+\hypertarget{additional-details}{%
+\subsection{Additional Details}\label{additional-details}}
 
 The simulation and analysis code can all be found in the project's Github repository (github.com/XXX). Additional information can be found in the appendix and data for the project can be found in OSF (XXX).
 
-\section{Results}\label{results}
+\hypertarget{results}{%
+\section{Results}\label{results}}
 
-\subsection{Differences in Outcomes on Training and Generalization Words}\label{differences-in-outcomes-on-training-and-generalization-words}
+\hypertarget{differences-in-outcomes-on-training-and-generalization-words}{%
+\subsection{Differences in Outcomes on Training and Generalization Words}\label{differences-in-outcomes-on-training-and-generalization-words}}
 
 Models in general achieved low error on the training words (\emph{M} = .0035, \emph{SD} = .00055) relative to generalization (\emph{M} = .012, \emph{SD} = .00078), and the distribution for training and generalization words was non-overlapping. Noteworthy variation existed within and across these two sets, data for which is provided in Table 3.
 
@@ -409,7 +410,8 @@ These differences are even more dramatic when testing models on their capacity t
 
 Foreshadowing later results, one important result concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiments suggest otherwise. The correlation between performance in train and generalization sets for these models was \(\rho\) = .55 (\(p\) \textless{} .001, 95\% CI = {[}.54, .56{]}). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impacts of ensembles of words, namely that the learning environment might confer learning benefits that don't transfer robustly beyond the words directly taught.
 
-\subsection{Differences in Outcomes across Levels of Representational Capacity}\label{differences-in-outcomes-across-levels-of-representational-capacity}
+\hypertarget{differences-in-outcomes-across-levels-of-representational-capacity}{%
+\subsection{Differences in Outcomes across Levels of Representational Capacity}\label{differences-in-outcomes-across-levels-of-representational-capacity}}
 
 Our experiment was designed to answer an additional question about the impact of word ensemble on learning outcomes: is there meaningful variation for learners with reduced representational resources? In general, generalization items were associated with more error than training, and models with less representational capacity were associated with higher error in both the training and generalization items. Results in both raw and standardized form are shown in Table 4 and Table 5.
 
@@ -501,7 +503,8 @@ Hidden & -0.022 & 0.001 & 300 & -33.44 & < 0.001 \\
 
 The final result indicates different degrees of variability in the effect of the ensemble due to the number of hidden units. In this case, the result indicated that models with fewer hidden units showed more variability than models with more hidden units.
 
-\subsection{Differences in Specific Ensembles at Different Levels of Representational Capacity}\label{differences-in-specific-ensembles-at-different-levels-of-representational-capacity}
+\hypertarget{differences-in-specific-ensembles-at-different-levels-of-representational-capacity}{%
+\subsection{Differences in Specific Ensembles at Different Levels of Representational Capacity}\label{differences-in-specific-ensembles-at-different-levels-of-representational-capacity}}
 
 In addition to examining generally whether or not performance differs in training and generalization words across levels of representational capacity, the experiment is able to answer a more specific question: would a learner perform comparably (relative to all other learners) if you could change their representational capacity to map orthography to phonology? We examined this by computing the rank correlation between the lowest (20) and highest (40) levels of hidden units in mean squared error in the holdout words, resulting in \(\rho\) = .89 (\(p\) \textless{} .001, 95\% CI = {[}.89, .90{]}).
 
@@ -518,7 +521,8 @@ This effect is depicted visually in Figure 4, Panel A for models with 20 and 40 
 \caption{Differences in mean squared error in generalization performance across models of 20 and 40 hidden units are depicted in three different ways. Panel A shows the distributions for mean squared error as violin plots and box plots for models of 20 and 40 hidden units as well as lines connecting the position of each model in one distribution to the other. The lines are colored with a gradient that indicates the amount of difference for each model in the rank distribution of mean squared error across each level of hidden units. Panel B shows the top 20 models whose differences in rank in the two distributions are greatest. Dashed lines show the 10 models which increased in rank most dramatically, and dotted lines show the models which decreased in rank most dramatically. Panel C shows the distribution of the differences in rank also depicted in Panels A and B but as a histogram. Each word ensemble appears in every level of hidden unit, therefore each ensemble has a single difference in rank associated with it across 20 and 40 hidden units, allowing for a histogram of differences. The difference value is calculated as the rank for a given ensemble at 20 hidden units minus the same model’s rank at 40 hidden units. The extreme values (min = -5065, max = 6586) represent the greatest change in rank performance for a model across the 20 and 40 hidden unit conditions (see also Panel B).}\label{fig:figure4}
 \end{figure}
 
-\section{Discussion}\label{discussion}
+\hypertarget{discussion}{%
+\section{Discussion}\label{discussion}}
 
 Do learning different ensembles of words contribute to differential outcomes in word reading skill? We investigated this question by simulating large numbers of learners who differed only in terms of the words they were taught and the representational resources they possessed. First, the data suggest that differences in outcomes measured in a set of held-out generalization words demonstrates clearly that there is variation associated with the ensemble of words comprising the learning environment. For example, the difference between the best and worst performing learners in terms of generalization accuracy across all conditions in the study was 1.36 standard deviation units of the outcome measure (mean squared error). The way in which the experiment was implemented permits a causal interpretation: The words matter in terms of learning outcomes when learning to pronounce printed words. More specifically, two learners who are otherwise the same differ in learning outcomes when exposed to different ensembles of printed words comprising their learning environment.
 
@@ -529,7 +533,8 @@ The findings are potentially important when considering variation that exists in
 Indeed, educational programs are developed with the idea that words matter, but with little direct research to support the idea. There is direct evidence that instructional methods influence word recognition development (Foorman et al., 1998). Differences in the design of reading curricula or other reading materials can be primarily attributed to degrees of freedom enjoyed by the designers of the material. For example, a program that focuses on ``sight word'' instruction alongside phonics rules will identify sight words likely using a popular resource from the educational literature. While there are many, few of them have empirical evidence supporting their effectiveness, and their contents are generally only partially overlapping. For example, the popular set of words used by educators known as ``the Dolch list'' (Dolch, 1936) shares only 46\% of words with another very popular list known as ``the Fry list'' (Fry, 1980). Likewise, no two programs that teach phonic patterns focus on the same phonic elements in doing so. Our study provides a window into the likely effects one might find in children subjected to these variable instructional environments, where we should expect some resources to perform better than others.
 Additionally, we've presented a tractable and scalable method for investigating individual differences in word reading development using established mechanistic models of learning developed in the cognitive sciences (Plaut et al., 1996; Seidenberg \& McClelland 1989). While these findings don't directly establish practices that can be adopted immediately in applied settings per se, the method provides potential promise to such ends. Nonetheless, our findings indicate something of educational importance that has not been tested directly in previous studies of learning to read: the ensemble of words the child is exposed to in early development matters, and learners with the least likelihood of establishing a coherent representation for printed words require, on average, a more carefully curated learning environment. In the case of early readers, this supports the important idea that the structure of the environment and the learner's ability interact in such a way that we should be sensitive to when designing their reading environment. Our specific findings on the relative benefits of words and the interaction with representational capacity fits with analogous but general findings from instructional science that children who struggle tend to benefit more from word reading environments that are more explicitly tuned to meet their specific needs. For example, Connor, Morrison, \& Katch (2004) found that children with low vocabulary performance benefitted from instruction that involved the teacher's explicit involvement in code-oriented instruction. In essence, more deliberate construction of the environment helped children exploit the structure of the language for children with diminished representational resources (see also Connor et al., 2007). We've investigated performance in terms of the differential effects of word ensemble in simulations that permit large scale experimentation in ways not easily achieved in children. Questions of precisely how to investigate such effects in children should be addressed in future research. Research should also focus on the specific characteristics of ensembles of words as they relate to specific individual learners. Our methods here have investigated the issue by simulating random variation over many learners. This work provides an empirical basis for justifying the construction of the environment at this more granular level of learning experiences despite the large scale and temporally diffuse nature of this particular learning domain.
 
-\section{References}\label{references}
+\hypertarget{references}{%
+\section{References}\label{references}}
 
 \begin{hangparas}{1.5em}{1}
 
@@ -583,17 +588,21 @@ Seidenberg, M. S., Waters, G. S., Barnes, M. A., I\& Tanenhaus, M. K. (1984). Wh
 
 \end{hangparas}
 
-\section{Data Availability Statement}\label{data-availability-statement}
+\hypertarget{data-availability-statement}{%
+\section{Data Availability Statement}\label{data-availability-statement}}
 
 Data and code in order to reproduce all analyses included here can be found at the project's page on the Open Science Framework (XX). Code to run the simulations reported here can be found at the project's GitHub page (XX).
 
-\section{Appendix}\label{appendix}
+\hypertarget{appendix}{%
+\section{Appendix}\label{appendix}}
 
-\subsection{Frequency Transformation}\label{frequency-transformation}
+\hypertarget{frequency-transformation}{%
+\subsection{Frequency Transformation}\label{frequency-transformation}}
 
 The frequencies were transformed in the same way as other connectionist approaches using similar networks (Seidenberg \& McClelland, 1989) using the formula: p = K ॱ log(frequency + 1). A log transformation was applied to all the frequencies, which was in turn multiplied by a value, K. This resulted in values that were scaled between 0 and 1, which was captured the idea that for very frequent words the error signal should be high (i.e., approximately 1 times the loss for that word) and very infrequent words should receive relatively weak signal resulting from the corresponding calculation of loss for that word. In order to account for the fact that some words were not present in the Lund \& Burgess (1996) corpus a constant was added to each frequency prior to being converted to log form in order to push very low values slightly away from zero. This resulted in a distribution such that the most frequent word ``the'' had a scaled value (p) of 1 and the least frequent values had values of near zero (1 x 10-6).
 
-\subsection{Subsampling Procedure for Linear Mixed Effects Model}\label{subsampling-procedure-for-linear-mixed-effects-model}
+\hypertarget{subsampling-procedure-for-linear-mixed-effects-model}{%
+\subsection{Subsampling Procedure for Linear Mixed Effects Model}\label{subsampling-procedure-for-linear-mixed-effects-model}}
 
 In order to estimate the statistical model included in the results section a subset of the complete dataset was obtained by randomly sampling 200 of the 10,000 word ensembles that participated in the study. This was done in order to allow the model to converge given the large dataset available for the linerar miced effects model (given that these models utilize data at the level of each individual observation/ word). The number 200 was selected because it was sufficiently large to support a robust statistical model but small enough such that that statistical model could converge. We anticipate that similar results would hold for other similarly large subsamples. In addition to the subsampling procedure, we also used the ``bound optimization by quadratic approximation'' optimizer implemented in the \(lmer()\) function in the lme4 package in R (Bates et al., 2015). The procedure for the sampling procedure and for all other analyses can be found in the project's OSF repository (XX).
 
