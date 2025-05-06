@@ -78,6 +78,10 @@ require(papaja)
 require(knitr)
 require(tidyverse)
 require(readxl)
+require(cowplot)
+
+# data
+source("load.R")
 
 ```
 # Introduction
@@ -187,17 +191,74 @@ read_csv("data/table_3.csv") %>%
 
 ```
 
-Given that outcomes of learning in children are often expressed in terms of the highest and lowest achievers, one way of expressing the variation in performance in these data is the difference between models that had the highest and lowest outcomes at the end of training. The highest performing model overall in the training set achieved a final error score of MSE = .0018 ($Z$ = -1.36). By comparison, the lowest performing model from that set achieved a final average error of MSE = .0056 ($Z$ = -0.52). The differences between these high and low performing models was .85 standard deviation units.
+Given that outcomes of learning in children are often expressed in terms of the highest and lowest achievers, one way of expressing the variation in performance in these data is the difference between models that had the highest and lowest outcomes at the end of training. The highest performing model overall in the training set achieved a final error score of MSE = .0018 ($Z$ = 3.90). By comparison, the lowest performing model from that set achieved a final average error of MSE = .0056 ($Z$ = -3.04). The differences between these high and low performing models was 6.94 standard deviation units.
 
-These differences are even more dramatic when testing models on their capacity to generalize. The highest performing model achieved an overall MSE for the generalization set of .01 ($Z$ = .39), and the lowest performing model an MSE of .02 ($Z$ = 1.75). The difference between performance among these models was 1.36 standard deviation units, which is depicted in Figure 2.
+These differences are even more dramatic when testing models on their capacity to generalize. The highest performing model achieved an overall MSE for the generalization set of .01 ($Z$ = 4.41), and the lowest performing model an MSE of .02 ($Z$ = -3.48). The difference between performance among these models was 7.89 standard deviation units, which is depicted in Figure 2.
 
-```{r figure2, fig.cap="The distribution of training and generalization items for each model at the end of training. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place across both training and generalization performance."}
+```{r figure2, fig.width=5, fig.height=3, fig.cap="The distribution of training and generalization items for each model at the end of training for both the raw and standardized mean squared error measures. Panel A shows raw mean squared error; Panel B shows mean squared error standardized. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Standardized data (B) are displayed to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets respectively. Colors are conditioned on the set displayed (also noted on x-axis)."}
 
-include_graphics("img/results_figure2.png")
+#include_graphics("img/results_figure2.png")
+
+
+plot_a = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  mutate(condition = factor(condition, levels = c("train", "holdout"))) %>% 
+  ggplot(aes(factor(condition), value, fill = factor(condition))) +
+  geom_violin() +
+  geom_boxplot(width = .2, outlier.size = .2) +
+  theme_apa() +
+  labs(x = "Set", y = "Mean squared error (raw)") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
+  scale_fill_manual(values = c("goldenrod3", "firebrick4"))
+
+plot_b = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  mutate(condition = factor(condition, levels = c("train", "holdout"))) %>% 
+  ggplot(aes(factor(condition), value_z, fill = factor(condition))) +
+  geom_violin() +
+  geom_boxplot(width = .2, outlier.size = .2) +
+  theme_apa() +
+  labs(x = "Set", y = "Mean squared error (Z)") +
+  theme(legend.position = "none") +
+  scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
+  scale_fill_manual(values = c("goldenrod3", "firebrick4"))
+
+plot = plot_grid(plot_a, plot_b, labels = c("A", "B"))
+
+plot
+#ggsave("img/results_figure2.png", plot = plot, width = 5, height = 4, dpi = 600)
+
 
 ```
 
-Foreshadowing later results, one important result concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiments suggest otherwise. The correlation between performance in train and generalization sets for these models was $\rho$ = .55 ($p$ < .001, 95% CI = [.54, .56]). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impacts of ensembles of words, namely that the learning environment might confer learning benefits that don’t transfer robustly beyond the words directly taught. 
+
+```{r correlationAcrossSets, warning=FALSE, message=FALSE, echo=FALSE}
+
+
+# correlation
+tmp  = model_summaries %>% 
+  filter(metric == "mse" & condition == "train") %>% 
+  mutate(tmp_id = str_c(model_id, "_", hidden_units)) %>% 
+  arrange(desc(value)) %>% 
+  mutate(rank_train = seq_len(n())) %>% 
+  select(tmp_id, rank_train)
+
+
+tmp_2 = model_summaries %>% 
+  filter(metric == "mse" & condition == "holdout") %>% 
+  mutate(tmp_id = str_c(model_id, "_", hidden_units)) %>% 
+  arrange(desc(value)) %>% 
+  mutate(rank_holdout = seq_len(n())) %>% 
+  left_join(tmp) 
+
+corr = cor.test(tmp_2$rank_holdout, tmp_2$rank_train)
+
+
+
+```
+
+Foreshadowing later results, one important outcome concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiments suggest otherwise. The correlation between performance in train and generalization sets for these models was $\rho$ = `r round(corr$estimate[[1]], digits = 2)` ($p$ < .001, 95% CI = [`r round(corr$conf.int[[1]], digits = 2)`, `r round(corr$conf.int[[2]], digits = 2)`]). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impacts of ensembles of words, namely that the learning environment might confer learning benefits that don’t transfer robustly beyond the words directly taught. 
 
 ## Differences in Outcomes across Levels of Representational Capacity
 Our experiment was designed to answer an additional question about the impact of word ensemble on learning outcomes: is there meaningful variation for learners with reduced representational resources? In general, generalization items were associated with more error than training, and models with less representational capacity were associated with higher error in both the training and generalization items. Results in both raw and standardized form are shown in Table 4 and Table 5.
@@ -206,7 +267,8 @@ Our experiment was designed to answer an additional question about the impact of
 
 ```{r table4}
 
-table_4 = read_csv("data/table_4.csv")
+table_4 = read_csv("data/table_4.csv") %>% 
+  mutate(`Representational Capacity` = as.character(`Representational Capacity`))
 
 table_4 %>% 
   apa_table(caption = "Descriptive Statistics on Training Words for All Levels of Representational Capacity",
@@ -219,9 +281,10 @@ table_4 %>%
 
 ```{r table5}
 
-table_4 = read_csv("data/table_5.csv")
+table_5 = read_csv("data/table_5.csv") %>% 
+  mutate(`Representational Capacity` = as.character(`Representational Capacity`))
 
-table_4 %>% 
+table_5 %>% 
   apa_table(caption = "Descriptive Statistics on Generalization Words for All Levels of Representational Capacity",
             note = "For each value the standardized (Z) version of mean squared error is shown in parentheses.")
 
@@ -229,15 +292,64 @@ table_4 %>%
 ```
 
 
-In the training items, models with 20 hidden units are associated with .17 standard deviations higher error than models with 30 hidden units and .21 standard deviations higher error than 40 hidden units. These same trends exist in the generalization set. Models with 20 hidden units are associated with .19 standard deviations higher error than models with 30 hidden units and .23 standard deviations higher error than models with 40 hidden units. These trends across levels of representational capacity for the training and generalization sets are shown in Figure 3.
+In the training items, models with 20 hidden units are on average associated with 1.41 standard deviations higher error than models with 30 hidden units and 1.77 standard deviations higher error than 40 hidden units. These same trends exist in the generalization set. Models with 20 hidden units are on average associated with 1.14 standard deviations higher error than models with 30 hidden units and 1.38 standard deviations higher error than models with 40 hidden units. These trends across levels of representational capacity for the training and generalization sets are shown in Figure 3.
 
-```{r figure3, fig.cap = "The distribution of training and generalization items for each model at the end of training. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place across both training and generalization performance."}
+```{r figure3, fig.width=6, fig.height=3, fig.cap = "The distribution of training and generalization items for each model at the end of training for both raw mean squared error (Panel A) and standardized (Panel B). Performance on the training words was in general much better (lower error) than on the generalization words (A). Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data in B are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets, respectively. HUs = hidden units."}
 
-include_graphics("img/results_figure3.png")
+#include_graphics("img/results_figure3.png")
+axis_titles = 10
+strip_text = 8
+
+plot_a = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  mutate(condition = case_when(condition == "holdout" ~ "Generalization",
+                               condition == "train" ~ "Train")) %>% 
+  mutate(condition = factor(condition, levels = c("Train", "Generalization"))) %>% 
+  ggplot(aes(factor(hidden_units), value, fill = interaction(factor(condition), factor(hidden_units)))) +
+  geom_violin() +
+  geom_boxplot(width = .5, outlier.size = .2) +
+  theme_apa() +
+  facet_wrap(~condition) +
+  theme(#text = element_text(family = "times"),
+        legend.position = "none",
+        axis.title = element_text(size = axis_titles),
+        strip.text = element_text(size = strip_text)) +
+  labs(x = "Representational capacity (HUs)",
+       y = "Mean squared error (raw)") +
+  scale_fill_manual(values = c("Train.20" = "lightgoldenrod", "Train.30" = "goldenrod3", "Train.40" = "orange", "Generalization.20" = "lightcoral", "Generalization.30" = "firebrick4", "Generalization.40" = "deeppink4"))
+
+
+plot_b = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  mutate(condition = case_when(condition == "holdout" ~ "Generalization",
+                               condition == "train" ~ "Train")) %>% 
+  mutate(condition = factor(condition, levels = c("Train", "Generalization"))) %>% 
+  ggplot(aes(factor(hidden_units), value_z, fill = interaction(factor(condition), factor(hidden_units)))) +
+  geom_violin() +
+  geom_boxplot(width = .5, outlier.size = .2) +
+  theme_apa() +
+  facet_wrap(~condition) +
+  theme(#text = element_text(family = "times"),
+        legend.position = "none",
+        axis.title = element_text(size = axis_titles),
+        strip.text = element_text(size = strip_text)) +
+  labs(x = "Representational capacity (HUs)",
+       y = "Mean squared error (Z)") +
+  scale_fill_manual(values = c("Train.20" = "lightgoldenrod", "Train.30" = "goldenrod3", "Train.40" = "orange", "Generalization.20" = "lightcoral", "Generalization.30" = "firebrick4", "Generalization.40" = "deeppink4"))
+
+plot = plot_grid(plot_a, plot_b, labels = c("A", "B"))
+
+
+
+plot
+
+#ggsave("img/results_figure3.png", plot = plot, width = 6.5, height = 4, dpi = 600)
+
+
 
 ```
 
-This effect bears out in a linear mixed effects model predicting mean squared error from number of hidden units. An unconditional model with random intercepts for word and ensemble had a better fit than a model without an ensemble random effect, $\chi^2$(1) = 1251.7, $p$ < .001^[The scale of the data was too large to use in its entirety when estimating these statistical models. Therefore, we used a subset of 200 randomly sampled ensembles with which to conduct the modeling. See appendix for information about the subsetting procedure and other information about model specification.]. In addition, we compared the fit of a model with the slope for the number of hidden units on the ensemble random effect (does the degree of variation in accuracy due to ensemble differ at different levels of hidden unit?) to one without a hidden-unit slope. The more complex statistical model, that with the hidden unit slope on the ensemble random intercept and an associated slope-intercept correlation, fit better, $\chi^2$(2) = 15.43, $p$ < .001. Table 6 displays the results.
+This effect bears out in a linear mixed effects model predicting mean squared error from number of hidden units. Here, to simplify the statistical model we modeled using a subset of the data given its large scale ^[See appendix information for a description of the modeling procedure used.]. An unconditional model with random intercepts for word and ensemble ^[In the code for the project, ensemble is identified as "model ID".] had a better fit than a model without an ensemble random effect, $\chi^2$(1) = 3069.80, $p$ < .001. In addition, we compared the fit of a model with the slope for the number of hidden units on the ensemble random effect (does the degree of variation in accuracy due to ensemble differ at different levels of hidden unit?) to one without a hidden-unit slope. The more complex statistical model, that with the hidden unit slope on the ensemble random intercept fit better, $\chi^2$(2) = 15.43, $p$ < .001. Table 6 displays the results.
 
 \begin{table}[ht]
 \centering
@@ -266,20 +378,133 @@ Hidden & -0.022 & 0.001 & 300 & -33.44 & < 0.001 \\
 The final result indicates different degrees of variability in the effect of the ensemble due to the number of hidden units. In this case, the result indicated that models with fewer hidden units showed more variability than models with more hidden units. 
 
 ## Differences in Specific Ensembles at Different Levels of Representational Capacity
-In addition to examining generally whether or not performance differs in training and generalization words across levels of representational capacity, the experiment is able to answer a more specific question: would a learner perform comparably (relative to all other learners) if you could change their representational capacity to map orthography to phonology? We examined this by computing the rank correlation between the lowest (20) and highest (40) levels of hidden units in mean squared error in the holdout words, resulting in $\rho$ = .89 ($p$ < .001, 95% CI = [.89, .90]).
+
+```{r corrBetween20and40, warning=FALSE, echo=FALSE, message=FALSE}
+tmp = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  filter(hidden_units == 20 & condition == "holdout") %>% 
+  select(model_id, hu20 = value_z) %>% 
+  left_join(model_summaries %>% 
+  filter(metric == "mse") %>% 
+  filter(hidden_units == 40 & condition == "holdout") %>% 
+  select(model_id, hu40 = value_z))
+
+corr = cor.test(tmp$hu20, tmp$hu40)
+
+
+```
+
+
+
+In addition to examining generally whether or not performance differs in training and generalization words across levels of representational capacity, the experiment is able to answer a more specific question: would a learner perform comparably (relative to all other learners) if you could change their representational capacity to map orthography to phonology? We examined this by computing the rank correlation between the lowest (20) and highest (40) levels of hidden units in mean squared error in the holdout words, resulting in $\rho$ = `r round(corr$estimate[[1]], digits = 2)` ($p$ < .001, 95% CI = [`r round(corr$conf.int[[1]], digits = 2)`, `r round(corr$conf.int[[2]], digits = 2)`]).
 
 Given that each model has an equivalent “twin” model at all other levels of representational capacity (i.e., the only thing that differs is the number of hidden units; all other aspects are held constant), this correlation provides a precise estimate of the effect of representational capacity on learning outcome. The fact that the correlation is not equal to 1 is surprising, suggesting the dynamic nature in which representational capacity and ensemble interact.
  
 This effect is depicted visually in Figure 4, Panel A for models with 20 and 40 hidden units, where Panel C depicts the distribution of differences in rank for all models across 20 and 40 hidden units. Given that the correlation between ranks at these two levels of hidden units is only partial (< 1), the differences in rank varies, as indicated by the gradient in the lines connecting distributions in Panel A and the spread in Panel C. In Panel A, parallel lines (with each other) would indicate that the rank order did not change. Panel B shows the models that move in rank most dramatically (in both positive and negative difference) across these two levels of hidden units. These data provide evidence that the ensemble affects learning outcome such that the same ensemble can be associated with different performance depending on the representational capacity of the learner.
 
-```{r figure4, out.width = "100%", fig.align = "center", fig.cap="Differences in mean squared error in generalization performance across models of 20 and 40 hidden units are depicted in three different ways. Panel A shows the distributions for mean squared error as violin plots and box plots for models of 20 and 40 hidden units as well as lines connecting the position of each model in one distribution to the other. The lines are colored with a gradient that indicates the amount of difference for each model in the rank distribution of mean squared error across each level of hidden units. Panel B shows the top 20 models whose differences in rank in the two distributions are greatest. Dashed lines show the 10 models which increased in rank most dramatically, and dotted lines show the models which decreased in rank most dramatically. Panel C shows the distribution of the differences in rank also depicted in Panels A and B but as a histogram. Each word ensemble appears in every level of hidden unit, therefore each ensemble has a single difference in rank associated with it across 20 and 40 hidden units, allowing for a histogram of differences. The difference value is calculated as the rank for a given ensemble at 20 hidden units minus the same model’s rank at 40 hidden units. The extreme values (min = -5065, max = 6586) represent the greatest change in rank performance for a model across the 20 and 40 hidden unit conditions (see also Panel B)."}
+```{r figure4, fig.width=6, fig.height=6, fig.align = "center", fig.cap="Differences in mean squared error in generalization performance across models of 20 and 40 hidden units are depicted in three different ways. Panel A shows the distributions for mean squared error as violin plots and box plots for models of 20 and 40 hidden units as well as lines connecting the position of each model in one distribution to the other. The lines are colored with a gradient that indicates the amount of difference for each model in the rank distribution of mean squared error across each level of hidden units. Panel B shows the top 20 models whose differences in rank in the two distributions are greatest. Dashed lines show the 10 models which increased in rank most dramatically, and dotted lines show the models which decreased in rank most dramatically. Panel C shows the distribution of the differences in rank also depicted in Panels A and B but as a histogram. Each word ensemble appears in every level of hidden unit, therefore each ensemble has a single difference in rank associated with it across 20 and 40 hidden units, allowing for a histogram of differences. The difference value is calculated as the rank for a given ensemble at 20 hidden units minus the same model’s rank at 40 hidden units. The extreme values (min = -5065, max = 6586) represent the greatest change in rank performance for a model across the 20 and 40 hidden unit conditions (see also Panel B)."}
 
-include_graphics("img/results_figure4.png")
+
+text_size = 8
+
+differences_in_rank = model_summaries %>% 
+  filter(hidden_units %in% c(20, 40)) %>% 
+  filter(metric == "mse" & condition == "holdout") %>% 
+  group_by(hidden_units) %>%
+  arrange(desc(value_z)) %>% 
+  mutate(rank = seq_len(n())) %>% 
+  ungroup() %>%
+  group_by(model_id) %>%
+  arrange(-desc(hidden_units)) %>% 
+  summarize(difference = diff(rank))
+
+
+plot_a = model_summaries %>% 
+  filter(hidden_units %in% c(20, 40)) %>% 
+  filter(metric == "mse" & condition == "holdout") %>% 
+  left_join(differences_in_rank, by = "model_id") %>% 
+  ggplot(aes(factor(hidden_units), value_z)) +
+  geom_line(linewidth = .2, aes(group = model_id, color = difference)) +
+  geom_violin(aes(fill = factor(hidden_units))) +
+  geom_boxplot(width = .2, outlier.size = .2) +
+  theme_apa() +
+  labs(title = "Differences in rank outcome\n 20, 40 hidden units (holdout only)",
+       x = "Representational capacity (in hidden units)", 
+       y = "Mean squared error (Z)", 
+       fill = "Hidden units") +
+  scale_fill_manual(values = c("lightcoral", "deeppink4")) +
+  scale_color_gradientn(colors = heat.colors(10)) +
+  theme(legend.position = "none",
+        plot.title = element_text(size = text_size),
+        plot.subtitle = element_text(size = text_size),
+        axis.text = element_text(size = text_size),
+        axis.title = element_text(size = text_size))
+
+
+plot_b = differences_in_rank %>% 
+  ggplot(aes(difference)) +
+  geom_histogram(color = "black", fill = "turquoise") +
+  labs(x = "Difference in rank outcome", y = "Count",
+       title = "Differences in rank outcome for each model") +
+  theme_apa() +
+  theme(plot.title = element_text(size = text_size),
+        axis.text = element_text(size = text_size),
+        axis.title = element_text(size = text_size))
+  
+
+# spotlighting top movers
+bottom_10 = differences_in_rank %>% 
+  arrange(difference) %>% 
+  slice_head(n = 10) %>% 
+  mutate(status = "bottom")
+
+top_bottom_10 = differences_in_rank %>% 
+  arrange(desc(difference)) %>% 
+  slice_head(n = 10) %>% 
+  mutate(status = "top") %>% 
+  rbind(bottom_10)
+
+plot_c = model_summaries %>% 
+  filter(hidden_units %in% c(20, 40)) %>% 
+  filter(metric == "mse" & condition == "holdout") %>% 
+  left_join(top_bottom_10)  %>%
+  mutate(model_id_ = case_when(is.na(status) ~ NA,
+                               !is.na(status) ~ model_id)) %>% 
+  ggplot(aes(factor(hidden_units), value_z)) +
+  geom_violin(aes(fill = factor(hidden_units))) +
+  geom_boxplot(width = .2, outlier.size = .2) +
+  geom_line(linewidth = .2, na.rm = TRUE, alpha = .9, aes(group = model_id_, color = status, linetype = status)) +
+  theme_apa() +
+  labs(title = "Top 20 movers in differences in outcome\nmodels at 20, 40 hidden units (holdout only)",
+       x = "Representational capacity (in hidden units)", 
+       y = "Mean squared error (Z)", 
+       fill = "Hidden units") +
+  scale_fill_manual(values = c("lightcoral", "deeppink4")) +
+  theme(legend.position = "none",
+        plot.title = element_text(size = text_size),
+        plot.subtitle = element_text(size = text_size),
+        axis.text = element_text(size = text_size),
+        axis.title = element_text(size = text_size)) +
+  scale_color_manual(values = c("top" = "grey22", "bottom" = "black")) +
+  scale_linetype_manual(values = c("dashed", "dotted"))
+
+
+
+top<- plot_grid(plot_a, plot_c, ncol = 2)
+
+# Arrange the bottom row plot centered
+bottom <- plot_grid(NULL, plot_b, NULL, ncol = 3, rel_widths = c(.5, 1.5, .5))
+
+# Combine the top and bottom rows
+plot <- plot_grid(top, bottom, ncol = 1, rel_heights = c(1, 1))
+plot
 
 ```
 
+
+
 # Discussion
-Do learning different ensembles of words contribute to differential outcomes in word reading skill? We investigated this question by simulating large numbers of learners who differed only in terms of the words they were taught and the representational resources they possessed. First, the data suggest that differences in outcomes measured in a set of held-out generalization words demonstrates clearly that there is variation associated with the ensemble of words comprising the learning environment. For example, the difference between the best and worst performing learners in terms of generalization accuracy across all conditions in the study was 1.36 standard deviation units of the outcome measure (mean squared error). The way in which the experiment was implemented permits a causal interpretation: The words matter in terms of learning outcomes when learning to pronounce printed words. More specifically, two learners who are otherwise the same differ in learning outcomes when exposed to different ensembles of printed words comprising their learning environment.
+Do learning different ensembles of words contribute to differential outcomes in word reading skill? We investigated this question by simulating large numbers of learners who differed only in terms of the words they were taught and the representational resources they possessed. First, the data suggest that differences in outcomes measured in a set of held-out generalization words demonstrates clearly that there is variation associated with the ensemble of words comprising the learning environment. For example, the difference between the best and worst performing learners in terms of generalization accuracy across all conditions in the study was 7.89 standard deviation units of the outcome measure (mean squared error). The way in which the experiment was implemented permits a causal interpretation: The words matter in terms of learning outcomes when learning to pronounce printed words. More specifically, two learners who are otherwise the same differ in learning outcomes when exposed to different ensembles of printed words comprising their learning environment.
 
 Second, we found that word ensemble interacts with the learner’s representational capacity; the benefits that a particular set of words confers to a learner can be different depending on the learner’s capacity to represent print-speech mappings. In general, less representational capacity is associated with more variation on training items (approximately the same variation on generalization items) and poorer performance overall. Representational capacity was manipulated such that learners had a twin model in each of the other levels, where the only aspect of learning that varied for that set of three twin models was the number of hidden units. Despite these shared characteristics (i.e., all factors other than capacity), we found that sets of twin learners occupied different positions in the error distribution across representational capacity. 
 
