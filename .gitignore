@@ -9,16 +9,20 @@ tmp.*
 .vscode/
 *.html
 *.tiff
+*.log
+
+
 
 .DS_Store
 *.pptx
 *.pdf
 *.docx
-
+*.png
 *.RData
 *.RProj
-
 *.tex
+
+NPJ2025_files/
 
 
 subset_data_for_lmem_v2.csv

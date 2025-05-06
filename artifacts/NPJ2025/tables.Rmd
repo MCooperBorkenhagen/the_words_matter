@@ -1,0 +1,103 @@
+---
+title: "paper"
+output: html_document
+date: "2025-01-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 200)
+require(tidyverse)
+require(papaja)
+require(RColorBrewer)
+require(tools)
+require(cowplot)
+library(broom)
+```
+
+```{r data, include=FALSE}
+source("load.R")
+
+
+```
+
+# Methods
+## Frequencies
+```{r frequencies}
+
+probabilities = read_csv('data/word_frequencies_and_probabilities.csv') %>% 
+  glimpse()
+
+probabilities %>% 
+  arrange(desc(frequency)) %>% 
+  head()
+
+```
+
+
+# Results
+## Differences in outcomes on training and generalization words
+Means, standard deviations, and extreme values for raw and standardized MSE and raw accuracy for the train and generalization sets. Here we analyze data without respect to (collapsing across) representational capacity.
+
+```{r descriptives1}
+model_summaries %>% 
+  filter(metric == "mse" | metric == "accuracy") %>% 
+  group_by(condition, metric) %>% 
+  filter(metric == "mse") %>% 
+  summarise(mse_mean = mean(value),
+            mse_sd = sd(value),
+            mse_z_mean = mean(value_z),
+            mse_z_sd = sd(value_z),
+            mse_min = min(value),
+            mse_z_min = min(value_z),
+            mse_max = max(value),
+            mse_z_max = max(value_z))
+
+```
+
+### Identify top and bottom 100 performers
+The number of rows resulting indicates the number of bottom 100 performers in train that were also in the bottom 100 performers in holdout.
+```{r}
+
+bottom_100 = model_summaries %>% 
+  filter(metric == "mse" & condition == "holdout") %>% 
+  group_by(condition) %>%
+  arrange(desc(value)) %>% 
+  mutate(rank = seq_len(n())) %>% 
+  filter(rank < 100) %>% 
+  pull(model_id)
+
+model_summaries %>% 
+  filter(metric == "mse" & condition == "train") %>% 
+  mutate(tmp_id = str_c(model_id, "_", hidden_units)) %>% 
+  arrange(desc(value)) %>% 
+  mutate(rank = seq_len(n())) %>% 
+  filter(rank < 100) %>% 
+  filter(model_id %in% bottom_100)
+
+```
+
+
+
+### Table 3
+
+```{r}
+model_summaries %>% 
+  filter(metric == "mse") %>% 
+  group_by(condition, hidden_units) %>% 
+  summarise(mse_mean = round(mean(value), digits = 3),
+          mse_sd = sd(value),
+          mse_z_mean = mean(value_z),
+          mse_z_sd = round(sd(value_z), digits = 3),
+          mse_min = min(value),
+          mse_z_min = round(min(value_z), digits = 2),
+          mse_max = max(value),
+          mse_z_max = round(max(value_z), digits = 3)) %>% 
+  mutate(MSE = str_c(mse_mean, " (", mse_z_mean, ")"),
+         SD = str_c(mse_sd, " (", mse_z_sd, ")"),
+         MIN = str_c(mse_min, " (", mse_z_min, ")"),
+         MAX = str_c(mse_max, " (", mse_z_max, ")")) %>% 
+  select(hidden_units, MSE, SD, MIN, MAX)
+
+
+```

@@ -6,81 +6,65 @@ date: "2025-04-05"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+require(tidyverse)
+require(Hmisc)
+
+# data
+source("load.R")
+generalization_words = read_csv("artifacts/NPJ2025/data/holdout_words.csv")
+
+
+
+words = read_csv("artifacts/NPJ2025/data/kidwords.csv", col_names = "word")
+
+samples = read_csv("data/samples.csv", col_names = F)
+holdout = read_csv("data/holdouts.csv", col_names = F)$X1
+
+generalization_words = words %>% 
+  mutate(in_holdout = holdout) %>% 
+  filter(in_holdout == 1) %>% 
+  select(word) %>% 
+  write_csv("artifacts/NPJ2025/data/holdout_words.csv", col_names = F)
+
+
+training_sets = samples %>% 
+  mutate(word = words$word) %>% 
+  pivot_longer(cols = -word, names_to = "model_id", values_to = "present_or_absent") %>% 
+  filter(present_or_absent == 1) %>% 
+  mutate(model_id = str_remove(model_id, "X"),
+         model_id = as.numeric(model_id)) %>% 
+  arrange(model_id) %>% 
+  select(-present_or_absent)
+
+write_csv(training_sets, file = "artifacts/NPJ2025/data/training_sets.csv")
+
 ```
 
 
+# Words included in experimentation
+## Words in training sets
+The identities of words include across all models. Select a value for `target_model_id` to inspect the words associated with it.
 
-The correlation across all levels of hidden unit (10 to 100 in increments of 10)
 ```{r}
+target_model_id = 1
 
-model_summaries_10_to_100 = read_csv('../../outputs/brute_force_2_with_frequency/model_summaries.csv') %>% 
-  pivot_longer(cols = accuracy_train:mse_holdout, names_to = "variable", values_to = "value") %>% 
-  mutate(condition = case_when(str_detect(variable, "train") ~ "train",
-                               str_detect(variable, "test") ~ "test",
-                               str_detect(variable, "holdout") ~ "holdout"),
-         metric = str_split(variable, "_", simplify = T)[,1]) %>% 
-  filter(condition != "test") %>% 
-  filter((hidden_units %in% c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100))) %>% 
-  select(-variable) 
+training_sets = read_csv("data/training_sets.csv")
+
+training_sets %>% 
+  filter(model_id == target_model_id) %>% 
+  view()
 
 
-model_summaries_10_to_100 = model_summaries_10_to_100 %>% 
-  left_join(model_summaries_10_to_100 %>% 
-              group_by(metric) %>% 
-              summarise(M = mean(value),
-                        SD = sd(value))) %>% 
-  mutate(value_z = (value-M)/SD)
-
-
-
-tmp = model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 10 & condition == "holdout") %>% 
-  select(model_id, hu10 = value_z) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 20 & condition == "holdout") %>% 
-  select(model_id, hu20 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 30 & condition == "holdout") %>% 
-  select(model_id, hu30 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 40 & condition == "holdout") %>% 
-  select(model_id, hu40 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 50 & condition == "holdout") %>% 
-  select(model_id, hu50 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 60 & condition == "holdout") %>% 
-  select(model_id, hu60 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 70 & condition == "holdout") %>% 
-  select(model_id, hu70 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 80 & condition == "holdout") %>% 
-  select(model_id, hu80 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 90 & condition == "holdout") %>% 
-  select(model_id, hu90 = value_z)) %>% 
-  left_join(model_summaries_10_to_100 %>% 
-  filter(metric == "mse") %>% 
-  filter(hidden_units == 100 & condition == "holdout") %>% 
-  select(model_id, hu100 = value_z))
-
-
-
-pairs.panels(tmp[, 2:ncol(tmp)]) 
-
-cor(tmp[, 2:ncol(tmp)])
-
-tmp %>% 
-  left_join(read_csv('../words/elp/elp_full_5.27.16.csv') %>% 
-  select(word = Word, naming_rt = I_NMG_Mean_RT, naming_accuracy = I_NMG_Mean_Accuracy))
 ```
+
+## Words in generalization set
+```{r}
+generalization_words = read_csv("data/holdout_words.csv", col_names = "word")
+
+generalization_words %>% 
+  view()
+
+
+```
+
