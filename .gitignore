@@ -17,10 +17,9 @@ tmp.*
 *.pptx
 *.pdf
 *.docx
-
+*.png
 *.RData
 *.RProj
-
 *.tex
 
 NPJ2025_files/
