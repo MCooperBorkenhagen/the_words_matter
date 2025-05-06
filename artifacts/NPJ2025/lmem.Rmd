@@ -25,15 +25,9 @@ conflicts_prefer(lme4::lmer)
 
 
 # control options of LMEM
-# ftol_abs = 1e-8, xtol_abs = 1e-8, 
-
-## fit models 1-2 with: rhobeg = 2e-3, rhoend = 2e-7
-control = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 5e6, rhobeg = .1, rhoend = 2e-9))
+CONTROL = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 5e6, rhobeg = .1, rhoend = 2e-9))
 
 # data
-
-
-
 twm = read_csv("data/subset_data_for_lmem_v2.csv") %>% 
   filter(holdout == TRUE) %>% 
   filter(hidden %in% c(20, 30, 40)) %>%
@@ -49,7 +43,13 @@ stopifnot(all(twm$holdout)) # should be holdout items only
 ## Statistical Model 1: Unconditional Model A
 Here we have our unconditional without model_id (nested within unconditional)
 ```{r StatisticalModel1}
-uncon_no_model_id = lmer(mse_z ~ 1 + (1 | word), data = twm, control = control)
+set.seed(765)
+
+uncon_no_model_id = twm %>% 
+  lmer(mse_z ~ 1 + (1 | word), data = ., control = CONTROL)
+
+save(uncon_no_model_id, file = "data/uncon_no_model_id.RData")
+
 summary(uncon_no_model_id)
 ```
 
@@ -58,10 +58,13 @@ summary(uncon_no_model_id)
 This is the unconditional model (nested within main_no_hidden_slopes)
 ```{r StatisticalModel2}
 
-uncon = lmer(mse_z ~ 1 + (1 | model_id) + (1 | word), data = twm, control = control)
+set.seed(765)
 
-uncon = lmer(mse_z ~ 1 + (1 | model_id) + (1 | word), data = twm)
-uncon_allfits = allFit(uncon)
+uncon = twm %>% 
+ lmer(mse_z ~ 1 + (1 | model_id) + (1 | word), data = ., control = CONTROL)
+
+save(uncon, file = "data/uncon.RData")
+
 
 summary(uncon)
 
@@ -72,13 +75,16 @@ summary(uncon)
 This is the main model without any slopes (nested within model_revised)
 
 ```{r StatisticalModel3}
-# 
-CONTROL = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 5e6, rhobeg = .1, rhoend = 2e-9))
+
+set.seed(765)
+
 main_no_hidden_slopes = twm %>% 
-  mutate(hidden = hidden/10) %>% 
   lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL)
 
+main_no_hidden_slopes
 summary(main_no_hidden_slopes)
+
+save(main_no_hidden_slopes, file = "data/main_no_hidden_slopes.RData")
 
 
 ```
@@ -88,9 +94,13 @@ summary(main_no_hidden_slopes)
 This is the main model without hidden slope on model_id (nested within main)
 
 ```{r StatisticalModel4}
+set.seed(765)
+
 main_revised = twm %>% 
-  mutate(hidden = hidden/10) %>% 
-  lmer(mse_z ~ 1 + hidden + (1 |model_id) + (1 + hidden | word), data = ., control = CONTROL)
+  lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 + hidden | word), data = ., control = CONTROL)
+
+main_revised
+save(main_revised, file = "data/main_revised.RData")
 
 summary(main_revised)
 ```
@@ -100,96 +110,43 @@ summary(main_revised)
 The main model (full model)
 
 ```{r StatisticalModel5}
-
+set.seed(765)
 
 main = twm %>% 
-  mutate(hidden = hidden/1000) %>% 
-  lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id) + (1 + hidden | word), data = ., control = CONTROL)
+  lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id) + (1 + hidden| word), data = ., control = CONTROL)
 
 
-save(main, file = "main_model.RData")
+save(main, file = "data/main_model.RData")
 summary(main)
 
 ```
 
+### Model comparisons
+An unconditional model with random intercepts for word and ensemble had a better fit than a model without an ensemble random effect.
+```{r significanceTest1}
+model_comparison_1 = anova(uncon_no_model_id, uncon) # is model_id necessary? (Does performance vary based on ensemble?)
 
-```{r}
-
-iterations = 20
-models = list()
-
-for (iter in seq(iterations)){
-  
-  extra = twm %>% 
-  #mutate(hidden = hidden) %>% 
-  lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id/word), data = ., control = CONTROL)
-  
-  id = paste("model_", iter, sep = "")
-  models[[id]] = extra
-  
-}
-
-for (m in models){
-  
-  print(summary(m))
-  
-  
-}
-summary(extra)
+save(model_comparison_1, file = "data/model_comparison_1.RData")
 
 
 
+# additional model comparisons for reference:
+model_comparison_2 = anova(uncon, main_no_hidden_slopes) # is fixed effect of hidden necessary? (Does representational capacity affect MSE?)
+save(model_comparison_2, file = "data/model_comparison_2.RData")
 
+
+model_comparison_3 = anova(main_no_hidden_slopes, main_revised) # is hidden slope on word necessary? (Does the word variability change based on representational capacity?)
+save(model_comparison_3, file = "data/model_comparison_3.RData")
 ```
 
-## Crossed
-```{r}
-
-iterations = 5
-models_main = list()
-
-for (iter in seq(iterations)){
-  
-  extra_ = twm %>% 
-    mutate(hidden = hidden/10000) %>% 
-    lmer(mse_z ~ 1 + hidden + (1 + hidden || model_id) + (1 + hidden || word), data = ., control = CONTROL)
-  
-  print(paste("Iteration", iter, "done"))
-  id = paste("model_", iter, sep = "")
-  models_main[[id]] = extra_
-  
-}
-
-for (m in models_main){
-  
-  print(summary(m))
-  
-  
-}
-
-summary(extra_)
+Comparison of model with a slope for hidden units in model ID ("ensemble") against one without such a slope. The more complex statistical model (with the hidden unit slope for model ID) fit better.
+```{r significanceTest2}
 
 
-
-```
-
-### One last try but with correlations of random effects
-
-
-```{r}
-extra_2 = twm %>% 
-    mutate(hidden = hidden/10000) %>% 
-    lmer(mse_z ~ 1 + hidden + (1 + hidden | model_id) + (1 + hidden | word), data = ., control = CONTROL)
-
+model_comparison_final = anova(main, main_revised) # is hidden slope on model_id necessary? (Does the ensemble variability change based on representational capacity?)
+save(model_comparison_final, file = "data/model_comparison_final.RData")
 
 ```
 
 
-```{r significanceTests}
-anova(uncon_no_model_id, uncon) # is model_id necessary? (Does performance vary based on ensemble?)
-anova(uncon, main_no_hidden_slopes) # is fixed effect of hidden necessary? (Does representational capacity affect MSE?)
-anova(main_no_hidden_slopes, main_revised) # is hidden slope on word necessary? (Does the word variability change based on representational capacity?)
-anova(main, main_revised) # is hidden slope on model_id necessary? (Does the ensemble variability change based on representational capacity?)
-
-```
 
