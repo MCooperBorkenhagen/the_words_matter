@@ -88,9 +88,9 @@ source("utilities.R")
 
 By the time a child becomes a proficient reader, they have encountered thousands of distinct words. Each encounter exposes them to properties of print that provide the basis for learning and generalization. Early in development the critical properties primarily concern letters and sounds and their patterns of co-occurrence across words (Castles, Rastle, & Nation, 2019; Seidenberg & MacDonald, 2019). Due to a variety of factors including genetics, disability, instruction, and exposure to print, among others (Connor, Morrison, & Katch, 2004; Cunningham & Stanovich, 1993; Cunningham & Stanovich, 2013; Gayan & Olson, 2003; Peterson & Pennington, 2015) children vary in their visual word recognition skills. The set of printed words that constitutes the child's learning environment (e.g., through reading aloud printed words independently or with others) is thought to be an additional factor that influence outcomes. Indirect evidence for this can be found in experimental studies with highly controlled training environments: Children perform differently on words with different properties (e.g., length, regularity, consistency; Seidenberg et al., 1984) and differ in their choice of pronunciation for ambiguous test items (e.g., _zead_) after rehearsal on different practice items (e.g., _heat_ and _zeal_ or _bread_ and _head_; Apfelbaum, Hazeltine, & McMurray, 2013). Learning studies have shown that even with limited exposure (even in absence of instruction) children are able to bootstrap their existing knowledge of letters and sounds to retain information about the identities of specific novel words to which they were previously exposed (Cunningham, Perry, Stanovich, & Share, 2002; Nation, Angell, & Castles, 2007). However, in studies that involve learning, less consideration is given to the variability in children’s performance vis-a-vis the exposure to words over a longer developmental span (i.e., over the course of early reading acquisition) and in generalization performance. 
 
-In educational practice, the words children encounter are primarily selected based on their teachers’ implicit theories about how children learn. This often involves the assumption that children need to read most words quickly and accurately and can self-teach unfamiliar ones. In very early reading acquisition in an alphabetic language (e.g., English, Spanish, Dutch), one theory is that children achieve automaticity fastest through direct teaching on a large number of letter-sound patterns apparent in the language (e.g., the sound of "ai" in _main_). This is far less straightforward in writing systems like English where the mappings between letters and phonemes are less structured, a property known as quasiregularity (see Seidenberg, Cooper Borkenhagen, & Kearns, 2020 for a discussion). In quasiregular writing systems the ensembles of experiences with printed words are particularly important in early development given the lack of generativity of rules that relate individual letters and phonemes, though we know little about how learning experiences at the level of word ensemble relate to outcomes in word recognition skills (Compton, Miller, Elleman & Steacy, 2014).
+In educational practice, the words children encounter are primarily selected based on their teachers’ implicit theories about how children learn. This often involves the assumption that children need to read most words quickly and accurately and can self-teach unfamiliar ones. In very early reading acquisition in an alphabetic language (e.g., English, Spanish, Dutch), one theory is that children achieve automaticity fastest through direct teaching on a large number of letter-sound patterns apparent in the language (e.g., the sound of "ai" in _main_). This is far less straightforward in writing systems like English where the mappings between letters and phonemes are less structured, a property known as quasiregularity (see Seidenberg, Cooper Borkenhagen, & Kearns, 2020 for a discussion). In quasiregular writing systems the ensembles of experiences with printed words are particularly important in early development given the lack of generativity of rules that relate individual letters and phonemes, and we know little about how learning experiences at the level of word ensemble relate to outcomes in word recognition skills (Compton, Miller, Elleman & Steacy, 2014).
 
-As a proxy for learning about the properties of words that support learning and generalization across ensembles of words, children are typically taught letter-sound patterns prioritized by their frequency in the language alongside being provided texts containing many instances of these patterns (i.e., phonics instruction). A common alternative teaching approach to phonics  focuses on sight reading. In this approach, children are exposed to the most common words in the language and learn to pronounce them using methods that leverage rote memorization rather than emphasizing the letter-sound patterns they contain.
+In an attempt to accelerate learning children are typically taught letter-sound patterns prioritized by their frequency in the language alongside being provided texts containing many instances of these patterns (i.e., phonics instruction). A common alternative teaching approach to phonics  focuses on sight reading. In this approach, children are exposed to the most common words in the language and learn to pronounce them using methods that leverage rote memorization rather than emphasizing the letter-sound patterns they contain.
 
 Importantly, these (and other) instructional theories employ different ideas about the types of experiences young readers should have with printed words on their way to skilled reading. Is it important to organize experiences in a way that privileges some words over others? This question motivates the current study. We consider whether word-recognition performance varies depending on the particular words students learn, i.e., the ensemble of words that comprises the child’s print learning environment. 
 
@@ -113,7 +113,7 @@ Regarding questions one and two, we anticipate that there will be wide variation
 
 # Methods
 ## Word Data
-Words were collected from popular children’s books, taken from the corpus developed in Lewis et al. (2021). All monosyllabic words ($N$ = 2,869) from the Lewis et al. (2021) corpus comprised the pool of words from which training and generalization items were sampled (no multisyllabic words were included). Learning was weighted by frequency such that during each learning trial the error signal associated with any word presented to the model was proportional to its frequency as established in the Hypertext Analog of Language corpus (Lund & Burgess, 1996; accessed through data from English Lexicon Project, see Balota et al., 2007)^[See appendix for a technical description of how the scaling is accomplished.]. Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, $F$(1, 2868) = 3.38, $p$ = .07; phonemes, $F$(1, 2774) = 3.25, $p$ = .07; frequency $F$(1, 2773) = 1.08, $p$ = .30.
+Words were collected from popular children’s books, taken from the corpus developed in Lewis et al. (2021). All monosyllabic words ($N$ = 2,869) from the Lewis et al. (2021) corpus comprised the pool of words from which training and generalization items were sampled (no multisyllabic words were included). Learning was weighted by frequency such that during each learning trial the error signal associated with any word presented to the model was proportional to its frequency as established in the Hypertext Analog of Language corpus (Lund & Burgess, 1996; accessed through data from English Lexicon Project, see Balota et al., 2007)^[See appendix for a technical description of how the scaling is accomplished.]. Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, $F$(1, 2868) = 3.38, $p$ = .07; phonemes, $F$(1, 2774) = 3.25, $p$ = .07; frequency $F$(1, 2773) = 1.08, $p$ = .30^[Note that degrees of freedom are different due to missingness attributed to the database used for the measure.].
 
 ```{r table1}
 
@@ -195,9 +195,7 @@ Given that outcomes of learning in children are often expressed in terms of the 
 
 These differences are even more dramatic when testing models on their capacity to generalize. The highest performing model achieved an overall MSE for the generalization set of .01 ($Z$ = 4.41), and the lowest performing model an MSE of .02 ($Z$ = -3.48). The difference between performance among these models was 7.89 standard deviation units, which is depicted in Figure 2.
 
-```{r figure2, fig.width=5, fig.height=3, fig.cap="The distribution of training and generalization items for each model at the end of training for both the raw and standardized mean squared error measures. Panel A shows raw mean squared error; Panel B shows mean squared error standardized. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Standardized data (B) are displayed to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets respectively. Colors are conditioned on the set displayed (also noted on x-axis)."}
-
-#include_graphics("img/results_figure2.png")
+```{r figure2, fig.width=7, fig.height=3, fig.cap="The distribution of training and generalization items for each model at the end of training for both the raw and standardized mean squared error measures. Panel A shows raw mean squared error; Panel B shows mean squared error standardized. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Standardized data (B) are displayed to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets respectively. Colors are conditioned on the set displayed (also noted on x-axis)."}
 
 
 plot_a = model_summaries %>% 
@@ -212,22 +210,29 @@ plot_a = model_summaries %>%
   scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
   scale_fill_manual(values = c("goldenrod3", "firebrick4"))
 
+
+train_sd = model_summaries %>% 
+  filter(metric == "mse" & condition == "train") %>%
+  summarise(SD = first(SD)) %>% 
+  pull(SD)
+
 plot_b = model_summaries %>% 
   filter(metric == "mse") %>% 
-  mutate(condition = factor(condition, levels = c("train", "holdout"))) %>% 
-  ggplot(aes(factor(condition), value_z, fill = factor(condition))) +
-  geom_violin() +
-  geom_boxplot(width = .2, outlier.size = .2) +
+  #group_by(condition) %>% 
+  mutate(#value_z_within_train = (value - M)/train_sd,
+         condition = case_when(condition == "train" ~ "Train",
+                               condition == "holdout" ~ "Generalization")) %>% 
+  ggplot(aes(value_z, fill = condition)) +
+  geom_density() +
   theme_apa() +
   labs(x = "Set", y = "Mean squared error (Z)") +
   theme(legend.position = "none") +
-  scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
-  scale_fill_manual(values = c("goldenrod3", "firebrick4"))
+  scale_fill_manual(values = c("firebrick4", "goldenrod3")) +
+  facet_wrap(vars(condition))
 
 plot = plot_grid(plot_a, plot_b, labels = c("A", "B"))
 
 plot
-#ggsave("img/results_figure2.png", plot = plot, width = 5, height = 4, dpi = 600)
 
 
 ```
@@ -258,7 +263,7 @@ corr = cor.test(tmp_2$rank_holdout, tmp_2$rank_train)
 
 ```
 
-Foreshadowing later results, one important outcome concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiment suggests otherwise. The correlation between performance in train and generalization sets for these models was $\rho$ = `r round(corr$estimate[[1]], digits = 2)` ($p$ < .001, 95% CI = [`r round(corr$conf.int[[1]], digits = 2)`, `r round(corr$conf.int[[2]], digits = 2)`]). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impact of ensemble, namely that the learning environment might confer learning benefits that don’t always transfer robustly beyond the words directly taught. 
+Foreshadowing later results, one important outcome concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiment suggests otherwise. The rank correlation between performance in train and generalization sets for these models was $r$ = `r round(corr$estimate[[1]], digits = 2)` ($p$ < .001, 95% CI = [`r round(corr$conf.int[[1]], digits = 2)`, `r round(corr$conf.int[[2]], digits = 2)`]). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impact of ensemble, namely that the learning environment might confer learning benefits that don’t always transfer robustly beyond the words directly taught. 
 
 ## Differences in Outcomes across Levels of Representational Capacity
 Our experiment was designed to answer an additional question about the impact of word ensemble on learning outcomes: is there meaningful variation for learners with reduced representational resources? In general, generalization items were associated with more error than training, and models with less representational capacity were associated with higher error in both the training and generalization items. Results in both raw and standardized form are shown in Table 4 and Table 5.
@@ -294,7 +299,7 @@ table_5 %>%
 
 In the training items, models with 20 hidden units are on average associated with 1.41 standard deviations higher error than models with 30 hidden units and 1.77 standard deviations higher error than 40 hidden units. These same trends exist in the generalization set. Models with 20 hidden units are on average associated with 1.14 standard deviations higher error than models with 30 hidden units and 1.38 standard deviations higher error than models with 40 hidden units. These trends across levels of representational capacity for the training and generalization sets are shown in Figure 3.
 
-```{r figure3, fig.width=6, fig.height=3, fig.cap = "The distribution of training and generalization items for each model at the end of training for both raw mean squared error (Panel A) and standardized (Panel B). Performance on the training words was in general much better (lower error) than on the generalization words (A). Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data in B are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets, respectively. HUs = hidden units."}
+```{r figure3, fig.width=7, fig.height=3, fig.cap = "The distribution of training and generalization items for each model at the end of training for both raw mean squared error (Panel A) and standardized (Panel B). Performance on the training words was in general much better (lower error) than on the generalization words (A). Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data in B are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets, respectively. HUs = hidden units."}
 
 #include_graphics("img/results_figure3.png")
 axis_titles = 10
@@ -324,18 +329,19 @@ plot_b = model_summaries %>%
   mutate(condition = case_when(condition == "holdout" ~ "Generalization",
                                condition == "train" ~ "Train")) %>% 
   mutate(condition = factor(condition, levels = c("Train", "Generalization"))) %>% 
-  ggplot(aes(factor(hidden_units), value_z, fill = interaction(factor(condition), factor(hidden_units)))) +
-  geom_violin() +
-  geom_boxplot(width = .5, outlier.size = .2) +
+  ggplot(aes(value_z, fill = interaction(factor(condition), factor(hidden_units)))) +
+  #geom_violin() +
+  #geom_boxplot(width = .5, outlier.size = .2) +
+  geom_density() +
   theme_apa() +
   facet_wrap(~condition) +
-  theme(#text = element_text(family = "times"),
-        legend.position = "none",
+  theme(legend.position = "none",
         axis.title = element_text(size = axis_titles),
         strip.text = element_text(size = strip_text)) +
   labs(x = "Representational capacity (HUs)",
        y = "Mean squared error (Z)") +
-  scale_fill_manual(values = c("Train.20" = "lightgoldenrod", "Train.30" = "goldenrod3", "Train.40" = "orange", "Generalization.20" = "lightcoral", "Generalization.30" = "firebrick4", "Generalization.40" = "deeppink4"))
+  scale_fill_manual(values = c("Train.20" = "lightgoldenrod", "Train.30" = "goldenrod3", "Train.40" = "orange", "Generalization.20" = "lightcoral", "Generalization.30" = "firebrick4", "Generalization.40" = "deeppink4")) +
+  facet_wrap(vars(condition))
 
 plot = plot_grid(plot_a, plot_b, labels = c("A", "B"))
 
@@ -399,7 +405,7 @@ Given that each model has an equivalent “twin” model at all other levels of 
  
 This effect is depicted visually in Figure 4, Panel A for models with 20 and 40 hidden units, where Panel C depicts the distribution of differences in rank for all models across 20 and 40 hidden units. Given that the correlation between ranks at these two levels of hidden units is only partial (< 1), the differences in rank varies, as indicated by the gradient in the lines connecting distributions in Panel A and the spread in Panel C. In Panel A, parallel lines (with each other) would indicate that the rank order did not change. Panel B shows the models that move in rank most dramatically (in both positive and negative difference) across these two levels of hidden units. These data provide evidence that the ensemble affects learning outcome such that the same ensemble can be associated with different performance depending on the representational capacity of the learner.
 
-```{r figure4, fig.width=6, fig.height=6, fig.align = "center", fig.cap="Differences in mean squared error in generalization performance across models of 20 and 40 hidden units are depicted in three different ways. Panel A shows the distributions for mean squared error as combined violin - box plots for models of 20 and 40 hidden units as well as lines connecting the position of each model in one distribution to the other. The lines are colored with a gradient that indicates the amount of difference for each model in the rank distribution of mean squared error across each level of hidden units. Panel B shows the top 20 models whose differences in rank in the two distributions are greatest. Dashed lines show the 10 models which increased in rank most dramatically, and dotted lines show the models which decreased in rank most dramatically. Panel C shows the distribution of the differences in rank also depicted in Panels A and B but as a histogram. Each word ensemble appears in every level of hidden unit, therefore each ensemble has a single difference in rank associated with it across 20 and 40 hidden units, allowing for a histogram of differences. The difference value is calculated as the rank for a given ensemble at 20 hidden units minus the same model’s rank at 40 hidden units. The extreme values (min = -5065, max = 6586) represent the greatest change in rank performance for a model across the 20 and 40 hidden unit conditions (see also Panel B)."}
+```{r figure4, fig.width=6, fig.height=6, fig.align = "center", fig.cap="Differences in mean squared error in generalization across models of 20 and 40 hidden units are depicted in three different ways. Panel A shows the distributions for MSE for models of 20 and 40 hidden units with lines connecting the position of each model in one distribution to the other. The lines are colored with a gradient that indicates the amount of difference for each model in the rank distribution of mean squared error across each level of hidden units. Panel B shows the top 20 models whose differences in rank in the two distributions are greatest (note that horizontal lines still indicate a change in rank). Dashed lines show the 10 models which increased in rank most dramatically, and dotted lines show the models which decreased in rank most dramatically (i.e., the model with rank one was associated with high MSE, not low MSE). Panel C shows the distribution of the differences in rank also depicted in Panels A and B but as a histogram. Each word ensemble appears in every level of hidden unit, therefore each ensemble has a single difference in rank associated with it across 20 and 40 hidden units, allowing for a histogram of differences. The difference value is calculated as the rank for a given ensemble at 20 hidden units minus the same model’s rank at 40 hidden units. The extreme values (min = -5065, max = 6586) represent the greatest change in rank performance for a model across the 20 and 40 hidden unit conditions (see also Panel B)."}
 
 
 text_size = 8
