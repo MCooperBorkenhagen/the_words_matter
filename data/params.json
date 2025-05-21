@@ -4,7 +4,6 @@
     "learning_rate": 0.01,
     "batch_size": 16,
     "epochs": 50,
-    "seed": 387,
-    "K": 0.061814757534436625
+    "seed": 387
 
 }
