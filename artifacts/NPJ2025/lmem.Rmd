@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 # Call libraries
+require(arrow)
 library(lattice)
 library(Matrix)
 library(lme4)
@@ -25,12 +26,10 @@ conflicts_prefer(lme4::lmer)
 
 
 # control options of LMEM
-CONTROL = lmerControl(optimizer = "bobyqa")
+CONTROL = lmerControl(optimizer = "bobyqa", verbose = 2)
 
 # data
-
-
-twm = read_csv("osf/subset_data_for_lmem.csv") %>% 
+twm = read_parquet("osf/data_for_lmem_full.parquet") %>% 
   filter(holdout == TRUE) %>% 
   glimpse() %>% 
   mutate(mse_z = (mse-mean(mse))/sd(mse)) 
