@@ -1,0 +1,66 @@
+---
+title: "figures"
+output: html_document
+date: "2025-05-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Figure 2
+The following code generates Figure 2, which is then altered in PPT and saved before included in the manuscript.
+```{r}
+
+plot = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  mutate(condition = factor(condition, levels = c("train", "holdout"))) %>% 
+  ggplot(aes(factor(condition), value, fill = factor(condition))) +
+  geom_violin() +
+  geom_boxplot(width = .2, outlier.size = .2) +
+  theme_apa() +
+  labs(x = "Set", y = "Mean squared error (raw)") +
+  theme(legend.position = "none",
+        axis.text = element_text(size = 18),
+        axis.title = element_text(size = 20)) +
+  scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
+  scale_fill_manual(values = c("goldenrod3", "firebrick4")) +
+  ylim(c(.001, .016))
+
+
+
+plot
+
+
+ggsave(filename = "figures/figure_2.pdf", plot = plot, width = 10, height = 8, dpi = 1200, units = "in", device = cairo_pdf)
+
+
+```
+
+For reference in creating the double y-axis...
+
+## The generalization set
+```{r}
+plot = model_summaries %>% 
+  filter(metric == "mse") %>% 
+  mutate(condition = factor(condition, levels = c("train", "holdout"))) %>% 
+  ggplot(aes(factor(condition), value_z, fill = factor(condition))) +
+  geom_violin() +
+  geom_boxplot(width = .2, outlier.size = .2) +
+  theme_apa() +
+  labs(x = "Set", y = "Mean squared error (standardized)") +
+  theme(legend.position = "none",
+        axis.text.y = element_text(size = 16),
+        axis.title.y = element_text(size = 20)) +
+  scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
+  scale_y_continuous(position = "right") +
+  scale_fill_manual(values = c("goldenrod3", "firebrick4"))
+
+plot
+
+ggsave(filename = "figures/figure_2_y_axis_reference.pdf", plot = plot, width = 10, height = 8, dpi = 1200, units = "in", device = cairo_pdf)
+
+```
+
+
