@@ -11,10 +11,17 @@ model_summaries = read_csv('data/model_summaries.csv') %>%
   filter((hidden_units %in% c(20, 30, 40))) %>%
   dplyr::select(-variable)
 
+SD_of_training_set = model_summaries %>% 
+  filter(condition == "train") %>% 
+  filter(metric == "mse") %>% 
+  summarise(SD = sd(value)) %>% 
+  pull(SD)
+  
+
 
 model_summaries = model_summaries %>% 
   left_join(model_summaries %>% 
               group_by(condition, metric) %>% 
-              summarise(M = mean(value),
-                        SD = sd(value))) %>% 
+              summarise(M = mean(value))) %>%
+  mutate(SD = SD_of_training_set) %>% 
   mutate(value_z = (value-M)/SD)

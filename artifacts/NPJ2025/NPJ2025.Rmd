@@ -32,7 +32,7 @@ affiliation:
 abstract: "The development of word reading skills fundamentally depends on children's interactions with printed words. A significant amount of research in the psychological and educational sciences has been conducted on the learning processes that contribute to skilled word recognition in children and adults. However, little is known about how ensembles of words encountered during early learning affect learning outcomes over timescales larger than what can be accomplished in a controlled experimental setting. In order to move past this limitation, using an established connectionist learning architecture (Plaut, McClelland, Seidenberg, & Patterson, 1996; Seidenberg & McClelland, 1989) we examined how variation in word ensembles influence learning and generalization during early reading acquisition. We simulated learners (*N* = 30,000) exposed to different sets of monosyllabic printed words drawn randomly from children’s literature at a large scale. In order to examine how different ensembles might impact learning depending on the learner's ability to represent the relationship between letters and sounds, we also manipulated the representational capacity of models by systematically changing the number of hidden units, holding the ensemble of words constant. Across levels of representational capacity each model had \"twins\" which differed only in terms of the number of hidden units they possessed. Results demonstrate significant variation in learning outcomes in a set of generalization words as a function of the word, ensemble and representational capacity. These findings inform educational practices by highlighting the importance of deliberate word selection to support early development."
  
 keywords          : "Reading development · learning to read · environmental factors · connectionism"
-wordcount         : "6,530 words"
+wordcount         : "6,720 words"
 documentclass     : "apa6"
 class             : "man"
 figsintext        : yes
@@ -178,7 +178,7 @@ read_csv("data/table_2.csv") %>%
 ```
 
 ## Additional Details
-The simulation and analysis code can all be found in the project’s Github repository (github.com/XXX). Additional information can be found in the appendix and data for the project can be found in OSF (XXX).
+The simulation and analysis code can all be found in the project’s Github repository (github.com/XXX). Additional information can be found in the appendix and data for the project can be found in OSF (https://osf.io/qvu8m/?view_only=a17142c524924219ad3951ac85324d8e).
 
 # Results
 ## Differences in Outcomes on Training and Generalization Words
@@ -197,43 +197,7 @@ These differences are even more dramatic when testing models on their capacity t
 
 ```{r figure2, fig.width=7, fig.height=3, fig.cap="The distribution of training and generalization items for each model at the end of training for both the raw and standardized mean squared error measures. Panel A shows raw mean squared error; Panel B shows mean squared error standardized. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Standardized data (B) are displayed to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets respectively. Colors are conditioned on the set displayed (also noted on x-axis)."}
 
-
-plot_a = model_summaries %>% 
-  filter(metric == "mse") %>% 
-  mutate(condition = factor(condition, levels = c("train", "holdout"))) %>% 
-  ggplot(aes(factor(condition), value, fill = factor(condition))) +
-  geom_violin() +
-  geom_boxplot(width = .2, outlier.size = .2) +
-  theme_apa() +
-  labs(x = "Set", y = "Mean squared error (raw)") +
-  theme(legend.position = "none") +
-  scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
-  scale_fill_manual(values = c("goldenrod3", "firebrick4"))
-
-
-train_sd = model_summaries %>% 
-  filter(metric == "mse" & condition == "train") %>%
-  summarise(SD = first(SD)) %>% 
-  pull(SD)
-
-plot_b = model_summaries %>% 
-  filter(metric == "mse") %>% 
-  #group_by(condition) %>% 
-  mutate(#value_z_within_train = (value - M)/train_sd,
-         condition = case_when(condition == "train" ~ "Train",
-                               condition == "holdout" ~ "Generalization")) %>% 
-  ggplot(aes(value_z, fill = condition)) +
-  geom_density() +
-  theme_apa() +
-  labs(x = "Set", y = "Mean squared error (Z)") +
-  theme(legend.position = "none") +
-  scale_fill_manual(values = c("firebrick4", "goldenrod3")) +
-  facet_wrap(vars(condition))
-
-plot = plot_grid(plot_a, plot_b, labels = c("A", "B"))
-
-plot
-
+include_graphics("figures/figure_2_.pdf")
 
 ```
 
@@ -574,7 +538,7 @@ Seidenberg, M. S., Waters, G. S., Barnes, M. A., \& Tanenhaus, M. K. (1984). Whe
 \end{hangparas}
 
 # Data Availability Statement
-Data and code in order to reproduce all analyses included here can be found at the project's page on the Open Science Framework (XX).
+Data and code in order to reproduce all analyses included here can be found at the project's page on the Open Science Framework (https://osf.io/qvu8m/?view_only=a17142c524924219ad3951ac85324d8e).
 
 # Code Availability Statement
 Code to run the simulations reported here can be found at the project's GitHub page (XX).
@@ -586,4 +550,4 @@ The frequencies were transformed in the same way as other connectionist approach
 ## Notes on the Estimation of Linear Mixed Effects Models
 Because of the large scale of the dataset, a random subset of the data was obtained for statistical model after initial attempts to arrive at a converged model failed with the entire dataset. In order to perform this subset, we randomly selected 1000 of the 10000 model ID values and saved item-level performance data for training and holdout words for that 1000 ensemble subset. Also, the complexity of the models estimated resulted in non-convergence when the maximal random effects structure was used (see Barr, Levy, Scheepers, & Tily, 2013 for a discussion of the benefits and challenges with using a maximal random effects structure). Numerous steps were taken to support convergence, following the advice of Brauer & Curtin (2018). Ultimately, we removed the random slopes for hidden unit, which models to converge. As suggested by Brauer & Curtin (2018) and by Barr et al., (2013), we advise the reader that in some circumstances removing random slopes in linear mixed effects models can result in an inflated false positive rate. However, we will note that this advice (which originated with Bare et al., 2013) is based on simulation data with far fewer observations per item (circumstances of 12 or 25 items respectively) than our own (see Barr et al., 2013 for more discussion).
 
-In addition to the subsampling procedure and following the steps in Brauer & Curtin (2018), we also used the "bound optimization by quadratic approximation" optimizer implemented in the $lmer()$ function in the lme4 package in R (Bates et al., 2015). The procedure for the sampling procedure and for all other analyses can be found in the project's OSF repository (XX). Note that in the code, "ensemble" is indicated with the variable "model_id" and "representational capacity" is associated with the variable name "hidden_units".
+In addition to the subsampling procedure and following the steps in Brauer & Curtin (2018), we also used the "bound optimization by quadratic approximation" optimizer implemented in the $lmer()$ function in the lme4 package in R (Bates et al., 2015). The procedure for the sampling procedure and for all other analyses can be found in the project's OSF repository (https://osf.io/qvu8m/?view_only=a17142c524924219ad3951ac85324d8e). Note that in the code, "ensemble" is indicated with the variable "model_id" and "representational capacity" is associated with the variable name "hidden_units".
