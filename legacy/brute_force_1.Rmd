@@ -1,0 +1,61 @@
+---
+title: "Brute Force 1"
+output: html_document
+date: "2024-02-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+
+
+d = brute_force_runs_to_df(path = 'outputs/brute_force_1')
+
+COLORS = c("blue4", "red4", 'orange2', 'purple4', 'green4')
+
+plot_1 = d %>% 
+  select(hidden_units, accuracy_train, accuracy_test, accuracy_holdout) %>% 
+  pivot_longer(cols = !hidden_units, names_to = 'test_set', values_to = 'accuracy') %>% 
+  #group_by(hidden_units, test_set) %>%
+  #summarise(sem = sd(accuracy)/sqrt(10000),
+  #          accuracy = mean(accuracy)) %>% 
+  filter(test_set == 'accuracy_holdout') %>% 
+  ggplot(aes(factor(hidden_units), accuracy, color = factor(hidden_units))) +
+  geom_violin() +
+  geom_boxplot() +
+  #geom_point() +
+  #geom_errorbar(aes(ymin = accuracy-sem, ymax = accuracy+sem), width = .3) +
+  theme_apa() +
+  labs(x = '# hidden units', y = 'Accuracy', title = "Holdout accuracy") +
+  theme(legend.position = 'none') +
+  scale_color_manual(values = COLORS)
+
+
+plot_2 = d %>% 
+  select(hidden_units, accuracy_train, accuracy_test, accuracy_holdout) %>% 
+  pivot_longer(cols = !hidden_units, names_to = 'test_set', values_to = 'accuracy') %>% 
+  filter(test_set == 'accuracy_test') %>% 
+  ggplot(aes(factor(hidden_units), accuracy, color = factor(hidden_units))) +
+  geom_violin() +
+  geom_boxplot() +
+  theme_apa() +
+  labs(x = '# hidden units', y = 'Accuracy', title = "Test accuracy") +
+  theme(legend.position = 'none') +
+  scale_color_manual(values = COLORS)
+
+plot_3 = d %>% 
+  select(hidden_units, accuracy_train, accuracy_test, accuracy_holdout) %>% 
+  pivot_longer(cols = !hidden_units, names_to = 'test_set', values_to = 'accuracy') %>% 
+  filter(test_set == 'accuracy_train') %>% 
+  ggplot(aes(factor(hidden_units), accuracy, color = factor(hidden_units))) +
+  geom_violin() +
+  geom_boxplot() +
+  theme_apa() +
+  labs(x = '# hidden units', y = 'Accuracy', title = "Train accuracy") +
+  theme(legend.position = 'none') +
+  scale_color_manual(values = COLORS)
+
+plot_1
+plot_2
+plot_3
+```
