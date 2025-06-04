@@ -9,6 +9,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 require(tidyverse)
 require(Hmisc)
+require(arrow)
+library(lme4)
 
 # data
 source("load.R")
@@ -39,6 +41,17 @@ training_sets = samples %>%
 
 write_csv(training_sets, file = "artifacts/NPJ2025/data/training_sets.csv")
 
+
+# control options of LMEM
+CONTROL = lmerControl(optimizer = "bobyqa")
+
+# data
+twm = read_parquet("osf/data_for_lmem_full.parquet") %>% 
+  filter(holdout == TRUE) %>% 
+  glimpse() %>% 
+  mutate(mse_z = (mse-mean(mse))/sd(mse)) 
+
+
 ```
 
 
@@ -67,4 +80,17 @@ generalization_words %>%
 
 
 ```
+
+## Detecting variation in the parameter estimates when fitting lmer()
+Note that this process uses only a subset of the data given the scale of the full dataset:
+```{r}
+
+
+
+
+
+
+```
+
+
 
