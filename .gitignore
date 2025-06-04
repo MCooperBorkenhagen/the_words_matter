@@ -28,3 +28,6 @@ NPJ2025_files/
 subset_data_for_lmem_v2.csv
 artifacts/NPJ2025/data/subset_data_for_lmem_v2.csv 
 artifacts/NPJ2025/data/subset_data_for_lmem.csv 
+
+artifacts/NPJ2025/osf/
+.RDataTmp
