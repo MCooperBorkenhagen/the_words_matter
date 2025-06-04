@@ -1,0 +1,191 @@
+---
+title: "Convergence"
+output: html_document
+date: "2025-05-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+require(arrow)
+require(lme4)
+
+CONTROL = lmerControl(optimizer = "bobyqa")
+
+
+
+N = 500
+
+set.seed(879)
+
+
+
+twm = read_parquet("osf/data_for_lmem_full.parquet")
+  
+sampled_model_ids = sample(twm$model_id, N)
+subsample = twm %>% 
+  filter(holdout == TRUE) %>% 
+  filter(model_id %in% sampled_model_ids)
+
+item_ids = subsample %>% 
+  distinct(word) %>% 
+  rownames_to_column(var = "item_id")
+
+
+
+noise_added_list = list()
+
+SD = sd(twm$mse)
+noise_added_list[["0"]] = subsample
+for (i in seq(20)){
+  
+  tmp = subsample %>% 
+    mutate(noise = rnorm(n(), mean = 0, sd = SD/1.6),
+           mse = mse + noise,
+           model_id = model_id + (i*10000)) %>% 
+    select(-noise)
+  
+  print(cor(subsample$mse, tmp$mse))
+  noise_added_list[[as.character(i)]] = tmp
+  
+}
+
+
+noise_added = purrr::list_rbind(noise_added_list) %>% 
+  glimpse() %>% 
+  mutate(mse_z = (mse-mean(mse))/sd(mse)) 
+```
+
+## Try maximal model with dataset with noise added
+
+```{r}
+
+set.seed(765)
+
+main_with_noise_added = noise_added %>% 
+  lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL, verbose = 1)
+
+main
+summary(main)
+
+
+```
+
+
+## Test parameter estimates across different runs, manipulating seed
+
+```{r}
+
+
+#twm = read_parquet("osf/data_for_lmem_full.parquet") %>% 
+#  filter(holdout == TRUE) %>% 
+#  mutate(mse_z = (mse-mean(mse))/sd(mse))
+
+  
+models = list()
+seedstart = 679
+for (i in seq(20)){
+  
+  set.seed(seedstart + i)
+
+  model = subsample %>% 
+    mutate(mse_z = (mse-mean(mse))/sd(mse)) %>% 
+    lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL, verbose = 2)
+  
+  print(paste("Model", i, "done"))
+  
+  models[[as.character(i)]] = model
+  
+}
+
+# summaries
+for (e in models){
+  
+  print(summary(e))
+  
+}
+
+summary(model)
+```
+
+# N = 500; different random subsets
+```{r}
+
+N = 500
+models = list()
+seedstart = 679
+for (i in seq(20)){
+  
+  set.seed(seedstart + i)
+  sampled_model_ids = sample(twm$model_id, N)
+  
+  set.seed(782)
+  model = twm %>%
+    filter(model_id %in% sampled_model_ids) %>% 
+    mutate(mse_z = (mse-mean(mse))/sd(mse)) %>% 
+    lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL, verbose = 2)
+  
+  print(paste("Model", i, "done"))
+  
+  models[[as.character(i)]] = model
+  
+}
+
+# summaries
+for (e in models){
+  
+  print(summary(e))
+  
+}
+
+summary(model)
+
+
+
+```
+
+
+# N = 1000; different random subsets
+```{r}
+
+N = 1000
+models = list()
+seedstart = 679
+for (i in seq(20)){
+  
+  set.seed(seedstart + i)
+  sampled_model_ids = sample(twm$model_id, N)
+  
+  set.seed(782)
+  model = twm %>%
+    filter(model_id %in% sampled_model_ids) %>% 
+    mutate(mse_z = (mse-mean(mse))/sd(mse)) %>% 
+    lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL, verbose = 2)
+  
+  print(paste("Model", i, "done"))
+  
+  models[[as.character(i)]] = model
+  
+}
+
+# summaries
+for (e in names(models)){
+  
+#  print(summary(e))
+  outfile = str_c("osf/convergence/model_summary_n_1000_subsampled_model_id_", e, ".RData")
+  model = models[e]
+  save(model, file = outfile)
+
+  
+}
+
+summary(model)
+
+
+
+```
+
+
+* I ran the above routine with different random seeds with the same subset of 500 randomly selected model IDs. All results were identical.
+* I ran the above routine with different random subsets (random seed constant for lmer()) of 500 randomly selected model IDs. All results were very similar.
+* I ran the above routine with different random subsets (random seed constant for lmer()) of 1000 randomly selected model IDs. All results were __________

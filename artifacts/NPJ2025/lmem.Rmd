@@ -26,13 +26,32 @@ conflicts_prefer(lme4::lmer)
 
 
 # control options of LMEM
-CONTROL = lmerControl(optimizer = "bobyqa", verbose = 2)
+CONTROL = lmerControl(optimizer = "bobyqa")
 
 # data
 twm = read_parquet("osf/data_for_lmem_full.parquet") %>% 
   filter(holdout == TRUE) %>% 
   glimpse() %>% 
-  mutate(mse_z = (mse-mean(mse))/sd(mse)) 
+  mutate(mse_z = (mse-mean(mse))/sd(mse),
+        hidden_standardized = if_else(hidden == 40, 1, if_else(hidden == 20, -1, 0))) 
+
+davg <- twm %>%
+    group_by(model_id) %>%
+    summarize(mse_mean = mean(mse)) %>%
+    mutate(mse_rank = rank(mse_mean)) %>%
+    mutate(strata = cut(mse_rank, seq(0, 10000, by = 1000))) %>%
+    group_by(strata)
+
+dsubset <- davg %>%
+    filter((mse_rank %% 100) == 0) %>%
+    arrange(mse_rank)
+
+subset <- twm %>%
+    filter(
+        model_id %in% dsubset$model_id
+    ) %>%
+    mutate(
+        mse = (mse - mean(mse)) / sd(mse))
 
 stopifnot(all(twm$holdout)) # should be holdout items only
 
@@ -45,7 +64,7 @@ Here we have our unconditional without model_id (nested within unconditional)
 ```{r StatisticalModel1}
 set.seed(765)
 
-unconditional_no_model_id = twm %>% 
+unconditional_no_model_id = subset %>% 
   lmer(mse_z ~ 1 + (1 | word), data = ., control = CONTROL)
 
 save(unconditional_no_model_id, file = "osf/unconditional_no_model_id.RData")
@@ -60,12 +79,12 @@ This is the unconditional model (nested within main_no_hidden_slopes)
 
 set.seed(765)
 
-unconditional = twm %>% 
+unconditional = subset %>% 
  lmer(mse_z ~ 1 + (1 | model_id) + (1 | word), data = ., control = CONTROL)
 
 save(unconditional, file = "osf/unconditional.RData")
 
-summary(uncon)
+summary(unconditional)
 ```
 
 
@@ -75,8 +94,8 @@ This is the main model without any slopes (nested within model_revised)
 ```{r StatisticalModel3}
 set.seed(765)
 
-main = twm %>% 
-  lmer(mse_z ~ 1 + hidden + (1 | model_id) + (1 | word), data = ., control = CONTROL)
+main = subset %>% 
+  lmer(mse_z ~ 1 + hidden_standardized + (1 | model_id) + (1 | word), data = ., control = CONTROL)
 
 main
 summary(main)
