@@ -113,7 +113,7 @@ Regarding questions one and two, we anticipate that there will be wide variation
 
 # Methods
 ## Word Data
-Words were collected from popular children’s books, taken from the corpus developed in Lewis et al. (2021). All monosyllabic words ($N$ = 2,869) from the Lewis et al. (2021) corpus comprised the pool of words from which training and generalization items were sampled (no multisyllabic words were included). Learning was weighted by frequency such that during each learning trial the error signal associated with any word presented to the model was proportional to its frequency as established in the Hypertext Analog of Language corpus (Lund & Burgess, 1996; accessed through data from English Lexicon Project, see Balota et al., 2007)^[See appendix for a technical description of how the scaling is accomplished.]. Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, $F$(1, 2868) = 3.38, $p$ = .07; phonemes, $F$(1, 2774) = 3.25, $p$ = .07; frequency $F$(1, 2773) = 1.08, $p$ = .30^[Note that degrees of freedom are different due to missingness attributed to the database used for the measure.].
+Words were collected from popular children’s books, taken from the corpus developed in Lewis et al. (2021). All monosyllabic words ($N$ = 2,869) from the Lewis et al. (2021) corpus comprised the pool of words from which training and generalization items were sampled (no multisyllabic words were included). Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, $F$(1, 2868) = 3.38, $p$ = .07; phonemes, $F$(1, 2774) = 3.25, $p$ = .07^[Note that degrees of freedom are different due to missingness attributed to the database used for the measure.].
 
 ```{r table1}
 
@@ -123,7 +123,7 @@ colnames(table_1) = c("Variable", "Mean", "SD", "Min", "Max", "Mean", "SD", "Min
 
 table_1 %>% 
   apa_table(caption = "Descriptive Statistics for Words Included in Sampling Process",
-            note = "300 holdout items were selected from 2,869 items in the full dataset. Frequency = log transformed frequency of words from Hyperspace Analogue of Language (Lund & Burgess, 1996).",
+            note = "300 holdout items were selected from 2,869 items in the full dataset.",
             col_spanners = list(`Holdout Items` = c(2, 5),
                                 `Full Dataset` = c(6, 9)))
 
