@@ -5,14 +5,11 @@ library(tidyverse)
 library(Hmisc)
 
 
-
-
 # data
 read_csv("data/subset_data_for_lmem_v2.csv") %>% 
   filter(holdout == TRUE) %>% 
   filter(hidden %in% c(20, 30, 40)) %>% 
   write_csv("osf/subset_data_for_lmem.csv")
-
 
 words = read_csv('../../data/kidwords/kidwords.csv', col_names = c('word'))
 
