@@ -48,15 +48,17 @@
 \makesavenoteenv{longtable}
 \usepackage{graphicx}
 \makeatletter
-\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
-\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
-\makeatother
-% Scale images if necessary, so that they will not overflow the page
-% margins by default, and it is still possible to overwrite the defaults
-% using explicit options in \includegraphics[width, height, ...]{}
-\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
 % Set default figure placement to htbp
-\makeatletter
 \def\fps@figure{htbp}
 \makeatother
 \setlength{\emergencystretch}{3em} % prevent overfull lines
@@ -95,6 +97,9 @@
 % get rid of language-specific shorthands (see #6817):
 \let\LanguageShortHands\languageshorthands
 \def\languageshorthands#1{}
+\ifLuaTeX
+  \usepackage[english]{selnolig} % disable illegal ligatures
+\fi
 % Manuscript styling
 \usepackage{upgreek}
 \captionsetup{font=singlespacing,justification=justified}
@@ -192,9 +197,6 @@
 \usepackage{hanging}
 \usepackage{multirow}
 \usepackage{booktabs}
-\ifLuaTeX
-  \usepackage{selnolig}  % disable illegal ligatures
-\fi
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
@@ -264,7 +266,7 @@ Regarding questions one and two, we anticipate that there will be wide variation
 
 \subsection{Word Data}\label{word-data}
 
-Words were collected from popular children's books, taken from the corpus developed in Lewis et al.~(2021). All monosyllabic words (\(N\) = 2,869) from the Lewis et al.~(2021) corpus comprised the pool of words from which training and generalization items were sampled (no multisyllabic words were included). Learning was weighted by frequency such that during each learning trial the error signal associated with any word presented to the model was proportional to its frequency as established in the Hypertext Analog of Language corpus (Lund \& Burgess, 1996; accessed through data from English Lexicon Project, see Balota et al., 2007)\footnote{See appendix for a technical description of how the scaling is accomplished.}. Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, \(F\)(1, 2868) = 3.38, \(p\) = .07; phonemes, \(F\)(1, 2774) = 3.25, \(p\) = .07; frequency \(F\)(1, 2773) = 1.08, \(p\) = .30\footnote{Note that degrees of freedom are different due to missingness attributed to the database used for the measure.}.
+Words were collected from popular children's books, taken from the corpus developed in Lewis et al.~(2021). All monosyllabic words (\(N\) = 2,869) from the Lewis et al.~(2021) corpus comprised the pool of words from which training and generalization items were sampled (no multisyllabic words were included). Table 1 presents descriptive statistics for both the full dataset and the subset of the data that were only used to evaluate generalization (in a holdout set never used for model training). The values for the descriptive statistics did not show a significant difference between the holdout items and the others: letters, \(F\)(1, 2868) = 3.38, \(p\) = .07; phonemes, \(F\)(1, 2774) = 3.25, \(p\) = .07\footnote{Note that degrees of freedom are different due to missingness attributed to the database used for the measure.}.
 
 \begin{table}[tbp]
 
@@ -281,13 +283,12 @@ Variable & \multicolumn{1}{c}{Mean} & \multicolumn{1}{c}{SD} & \multicolumn{1}{c
 \midrule
 Letters & 4.41 & 1.06 & 2.00 & 8.00 & 4.52 & 1.08 & 2.00 & 9.00\\
 Phonemes & 3.48 & 0.82 & 2.00 & 6.00 & 3.57 & 0.83 & 1.00 & 9.00\\
-Frequency & 8.76 & 2.15 & 3.87 & 16.19 & 8.88 & 2.08 & 0.00 & 16.96\\
 \bottomrule
 \addlinespace
 \end{tabular}
 
 \begin{tablenotes}[para]
-\normalsize{\textit{Note.} 300 holdout items were selected from 2,869 items in the full dataset. Frequency = log transformed frequency of words from Hyperspace Analogue of Language (Lund \& Burgess, 1996).}
+\normalsize{\textit{Note.} 300 holdout items were selected from 2,869 items in the full dataset.}
 \end{tablenotes}
 
 \end{threeparttable}
@@ -309,7 +310,7 @@ Finally, the vectors within each slot are concatenated to form a single pair of 
 
 \begin{figure}
 \centering
-\includegraphics{img/figure_1.jpg}
+\pandocbounded{\includegraphics[keepaspectratio]{img/figure_1.jpg}}
 \caption{\label{fig:figure1}A depiction of the network architecture and hyperparameter values. Hyperparameters used for simulations are listed in the box labeled ``Network Structure''. See similar architectures in Plaut et al.~(1996), Simulation 1, Seidenberg \& McClelland (1989), and Cox et al.~(2019). Layers are represented with circles and boxes and arrows represent weight matrices, as in depictions of connectionist reading models elsewhere. The layers are not represented with the total number of units actually specified in models, but are simplified to preserve space in the figure.}
 \end{figure}
 
@@ -368,7 +369,7 @@ The simulation and analysis code can all be found in the project's Github reposi
 
 \subsection{Differences in Outcomes on Training and Generalization Words}\label{differences-in-outcomes-on-training-and-generalization-words}
 
-Models in general achieved low error on the training words (\emph{M} = .0035, \emph{SD} = .00055) relative to generalization (\emph{M} = .012, \emph{SD} = .00078), and the distribution for training and generalization words was non-overlapping. Noteworthy variation existed within and across these two sets, data for which is provided in Table 3.
+Models in general achieved low error on the training words (\emph{M} = .0029, \emph{SD} = .00048) relative to generalization (\emph{M} = .012, \emph{SD} = .00076), and the distribution for training and generalization words was non-overlapping. Noteworthy variation existed within and across these two sets, data for which is provided in Table 3.
 
 \begin{table}[tbp]
 
@@ -377,18 +378,18 @@ Models in general achieved low error on the training words (\emph{M} = .0035, \e
 
 \caption{\label{tab:table3}Distribution of Mean Squared Error for Train and Generalization Sets}
 
-\begin{tabular}{llll}
+\begin{tabular}{lllll}
 \toprule
-Set & \multicolumn{1}{c}{Mean (SD)} & \multicolumn{1}{c}{Minimum (Z)} & \multicolumn{1}{c}{Maximum (Z)}\\
+Set & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD (Z)} & \multicolumn{1}{c}{Minimum (Z)} & \multicolumn{1}{c}{Maximum (Z)}\\
 \midrule
-Train & .004 (.001) & .002 (-3.04) & .006 (3.90)\\
-Generalization & .013 (.001) & .01 (-3.48) & .02 (4.41)\\
+Train & .0029 (-11.8) & 0.00048 (.62) & 0.0013 (-13.9) & .005 (-9.04)\\
+Generalization & .012 (0) & 0.00076 (1) & .0093 (-3.39) & .015 (4.03)\\
 \bottomrule
 \addlinespace
 \end{tabular}
 
 \begin{tablenotes}[para]
-\normalsize{\textit{Note.} Error is provided in raw form and standardized form. The standardized form appears in parentheses. These values are calculated across all words in each set (train and generalization), collapsing across representational capacity conditions.}
+\normalsize{\textit{Note.} Error is provided in raw form and standardized form. The standardized form appears in parentheses, where standardization happens relative to the generalization set as in other analyses here. These values are calculated across all words in each set (train and generalization), collapsing across representational capacity conditions.}
 \end{tablenotes}
 
 \end{threeparttable}
@@ -396,17 +397,17 @@ Generalization & .013 (.001) & .01 (-3.48) & .02 (4.41)\\
 
 \end{table}
 
-Given that outcomes of learning in children are often expressed in terms of the highest and lowest achievers, one way of expressing the variation in performance in these data is the difference between models that had the highest and lowest outcomes at the end of training. The highest performing model overall in the training set achieved a final error score of MSE = .0018 (\(Z\) = 3.90). By comparison, the lowest performing model from that set achieved a final average error of MSE = .0056 (\(Z\) = -3.04). The differences between these high and low performing models was 6.94 standard deviation units.
+Given that outcomes of learning in children are often expressed in terms of the highest and lowest achievers, one way of expressing the variation in performance in these data is the difference between models that had the highest and lowest outcomes at the end of training. The highest performing model overall in the training set achieved a final error score of MSE = .005 (\(Z\) = -9.04). By comparison, the lowest performing model from that set achieved a final average error of MSE = .0013 (\(Z\) = -13.9). The differences between these high and low performing models was 4.87 standard deviation units.
 
-These differences are even more dramatic when testing models on their capacity to generalize. The highest performing model achieved an overall MSE for the generalization set of .01 (\(Z\) = 4.41), and the lowest performing model an MSE of .02 (\(Z\) = -3.48). The difference between performance among these models was 7.89 standard deviation units, which is depicted in Figure 2.
+These differences are even more dramatic when testing models on their capacity to generalize. The highest performing model achieved an overall MSE for the generalization set of .015 (\(Z\) = 4.03), and the lowest performing model an MSE of .0093 (\(Z\) = -3.39). The difference between performance among these models was 7.42 standard deviation units, which is depicted in Figure 2.
 
 \begin{figure}
 \centering
-\includegraphics{figures/figure_2_.pdf}
-\caption{\label{fig:figure2}The distribution of training and generalization items for each model at the end of training for both the raw and standardized mean squared error measures. Panel A shows raw mean squared error; Panel B shows mean squared error standardized. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Standardized data (B) are displayed to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets respectively. Colors are conditioned on the set displayed (also noted on x-axis).}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/figure_2.pdf}}
+\caption{\label{fig:figure2}The distribution of training and generalization items for each model at the end of training for both the raw and standardized mean squared error measures. Panel A shows raw mean squared error; Panel B shows mean squared error standardized. Performance on the training words was in general much better (lower error) than on the generalization words. Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Standardized data (B) are displayed to afford an interpretation in standard deviation units, where standardization takes place within generalization sets and thus expresses variation relative to that set. Colors are conditioned on the set displayed (also noted on x-axis).}
 \end{figure}
 
-Foreshadowing later results, one important outcome concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiment suggests otherwise. The rank correlation between performance in train and generalization sets for these models was \(r\) = 0.55 (\(p\) \textless{} .001, 95\% CI = {[}0.54, 0.56{]}). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impact of ensemble, namely that the learning environment might confer learning benefits that don't always transfer robustly beyond the words directly taught.
+Foreshadowing later results, one important outcome concerns the relative performance of models in the training and generalization sets. It might be intuitive to think that achievement on one set (training or generalization) would correspond directly to achievement on the other. That is to say, that reading performance on words taught would result in strictly comparable performance on generalization words. Our experiment suggests otherwise. The rank correlation between performance in train and generalization sets for these models was \(r\) = 0.53 (\(p\) \textless{} .001, 95\% CI = {[}0.52, 0.54{]}). To provide a concrete example of this partial correlation, of the 100 worst performing models in the generalization set, only two models were also in the poorest performing models in the training words. This is potentially important because it suggests something deeper about the impact of word ensembles, namely that the learning environment might confer learning benefits that don't always transfer robustly beyond the words directly taught.
 
 \subsection{Differences in Outcomes across Levels of Representational Capacity}\label{differences-in-outcomes-across-levels-of-representational-capacity}
 
@@ -421,11 +422,11 @@ Our experiment was designed to answer an additional question about the impact of
 
 \begin{tabular}{lllll}
 \toprule
-Representational Capacity & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD (Z)} & \multicolumn{1}{c}{Min (Z)} & \multicolumn{1}{c}{Max (Z)}\\
+Representational capacity & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD (Z)} & \multicolumn{1}{c}{Min (Z)} & \multicolumn{1}{c}{Max (Z)}\\
 \midrule
-20 & 0.004 (1.06) & 0.0004 (.68) & 0.003 (-1.28) & 0.006 (3.90)\\
-30 & 0.003 (-.35) & 0.0003 (.63) & 0.002 (-2.65) & 0.005 (2.58)\\
-40 & 0.003 (-.71) & 0.0003 (.63) & 0.002 (-3.04) & 0.005 (2.12)\\
+20 & 0.013 (0.88) & 0.00059 (0.78) & 0.0103 (-2.03) & 0.0149 (4.03)\\
+30 & 0.012 (-0.29) & 0.00058 (0.77) & 0.0097 (-2.88) & 0.0142 (3.06)\\
+40 & 0.011 (-0.59) & 0.00059 (0.77) & 0.0093 (-3.39) & 0.0138 (2.51)\\
 \bottomrule
 \addlinespace
 \end{tabular}
@@ -448,11 +449,11 @@ Representational Capacity & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD
 
 \begin{tabular}{lllll}
 \toprule
-Representational Capacity & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD (Z)} & \multicolumn{1}{c}{Min (Z)} & \multicolumn{1}{c}{Max (Z)}\\
+Representational capacity & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD (Z)} & \multicolumn{1}{c}{Min (Z)} & \multicolumn{1}{c}{Max (Z)}\\
 \midrule
-20 & 0.013 (.84) & 0.0006 (0.79) & 0.011 (-1.93) & 0.016 (4.41)\\
-30 & 0.012 (-.30) & 0.0006 (0.80) & 0.010 (-3.16) & 0.015 (3.11)\\
-40 & 0.012 (-.54) & 0.0006 (0.80) & 0.010 (-3.48) & 0.015 (2.81)\\
+20 & 0.0034 (-11.11) & 0.00031 (0.41) & 0.0022 (-12.75) & 0.005 (-9.04)\\
+30 & 0.0027 (-12.01) & 0.00029 (0.38) & 0.0015 (-13.61) & 0.0041 (-10.15)\\
+40 & 0.0025 (-12.25) & 0.00028 (0.37) & 0.0013 (-13.85) & 0.0041 (-10.24)\\
 \bottomrule
 \addlinespace
 \end{tabular}
@@ -466,12 +467,12 @@ Representational Capacity & \multicolumn{1}{c}{Mean (Z)} & \multicolumn{1}{c}{SD
 
 \end{table}
 
-In the training items, models with 20 hidden units are on average associated with 1.41 standard deviations higher error than models with 30 hidden units and 1.77 standard deviations higher error than 40 hidden units. These same trends exist in the generalization set. Models with 20 hidden units are on average associated with 1.14 standard deviations higher error than models with 30 hidden units and 1.38 standard deviations higher error than models with 40 hidden units. These trends across levels of representational capacity for the training and generalization sets are shown in Figure 3.
+In the training items, models with 20 hidden units are on average associated with .90 standard deviations higher error than models with 30 hidden units and 1.14 standard deviations higher error than 40 hidden units. These same trends exist in the generalization set, though to a greater degree numerically. Models with 20 hidden units are on average associated with 1.17 standard deviations higher error than models with 30 hidden units and 1.47 standard deviations higher error than models with 40 hidden units. These trends across levels of representational capacity for the training and generalization sets are shown in Figure 3.
 
 \begin{figure}
 \centering
-\includegraphics{NPJ2025_files/figure-latex/figure3-1.pdf}
-\caption{\label{fig:figure3}The distribution of training and generalization items for each model at the end of training for both raw mean squared error (Panel A) and standardized (Panel B). Performance on the training words was in general much better (lower error) than on the generalization words (A). Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data in B are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place within training and generalization sets, respectively. HUs = hidden units.}
+\pandocbounded{\includegraphics[keepaspectratio]{NPJ2025_files/figure-latex/figure3-1.pdf}}
+\caption{\label{fig:figure3}The distribution of training and generalization items for each model at the end of training for standardized mean squared error. Performance on the training words was in general much better (lower error) than on the generalization words (A). Noteworthy variation exists within each set, leading to dramatic differences in performance for the lowest and highest achieving models. Data are displayed in terms of standardized mean squared error to afford an interpretation in standard deviation units, where standardization takes place within the generalization set.}
 \end{figure}
 
 The effect of word, ensemble, and representational capacity bears out in a linear mixed effects model predicting mean squared error (standardized) from number of hidden units and using model comparisons with specifications for different random effects \footnote{See supplement for additional information about model specification, including details regarding the steps taken to support model convergence for the linear mixed effects models.}. A model with random intercepts for word and ensemble had a better fit than a model without an ensemble random intercept, \(\chi^2\)(1) = 3069.80, \(p\) \textless{} .001. In addition, a model with a fixed effect for hidden units provided a better fit than one without such an effect, \(\chi^2\)(1) = 5015.90, \(p\) \textless{} .001.
@@ -502,7 +503,7 @@ Hidden & -0.01 & 0.0001 & 300 & -70.92 & < 0.001 \\
 
 \subsection{Differences in Outcomes of Specific Ensembles at Different Levels of Representational Capacity}\label{differences-in-outcomes-of-specific-ensembles-at-different-levels-of-representational-capacity}
 
-In addition to examining generally whether or not performance differs in training and generalization words across levels of representational capacity, the experiment is able to answer a more specific question: would a learner perform comparably (relative to all other learners) if you could change their representational capacity to map orthography to phonology? We examined this by computing the rank correlation between the lowest (20) and highest (40) levels of hidden units in mean squared error in the holdout words, resulting in \(\rho\) = 0.89 (\(p\) \textless{} .001, 95\% CI = {[}0.89, 0.90{]}).
+In addition to examining generally whether or not performance differs in training and generalization words across levels of representational capacity, the experiment is able to answer a more specific question: would a learner perform comparably (relative to all other learners) if you could change their representational capacity to map orthography to phonology? We examined this by computing the rank correlation between the lowest (20) and highest (40) levels of hidden units in mean squared error in the holdout words, resulting in \(\rho\) = 0.88 (\(p\) \textless{} .001, 95\% CI = {[}0.87, 0.88{]}).
 
 Given that each model has an equivalent ``twin'' model at all other levels of representational capacity (i.e., the only thing that differs is the number of hidden units; all other aspects are held constant), this correlation provides a precise estimate of the effect of representational capacity on learning outcome. The fact that the correlation is not equal to 1 is surprising, suggesting the dynamic nature in which representational capacity and ensemble interact.
 
