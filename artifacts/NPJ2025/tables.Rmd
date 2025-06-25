@@ -21,23 +21,15 @@ source("load.R")
 
 ```
 
+# Intro
+No tables calculated in this script. See Table 1 CSV for that data, which is calculated offline.
+
 # Methods
-## Frequencies
-```{r frequencies}
-
-probabilities = read_csv('data/word_frequencies_and_probabilities.csv') %>% 
-  glimpse()
-
-probabilities %>% 
-  arrange(desc(frequency)) %>% 
-  head()
-
-```
-
+No tables calculated in this script. See Table 2 CSV for that data, which is calculated offline.
 
 # Results
-## Differences in outcomes on training and generalization words
-Means, standard deviations, and extreme values for raw and standardized MSE and raw accuracy for the train and generalization sets. Here we analyze data without respect to (collapsing across) representational capacity.
+## Table 3
+Means, standard deviations, and extreme values for raw and standardized MSE and raw accuracy for the train and generalization sets. Here we analyze data without respect to (collapsing across) representational capacity. These data populate Table 3.
 
 ```{r descriptives1}
 model_summaries %>% 
@@ -77,27 +69,5 @@ model_summaries %>%
 
 ```
 
-
-
-### Table 3
-
-```{r}
-model_summaries %>% 
-  filter(metric == "mse") %>% 
-  group_by(condition, hidden_units) %>% 
-  summarise(mse_mean = round(mean(value), digits = 3),
-          mse_sd = sd(value),
-          mse_z_mean = mean(value_z),
-          mse_z_sd = round(sd(value_z), digits = 3),
-          mse_min = min(value),
-          mse_z_min = round(min(value_z), digits = 2),
-          mse_max = max(value),
-          mse_z_max = round(max(value_z), digits = 3)) %>% 
-  mutate(MSE = str_c(mse_mean, " (", mse_z_mean, ")"),
-         SD = str_c(mse_sd, " (", mse_z_sd, ")"),
-         MIN = str_c(mse_min, " (", mse_z_min, ")"),
-         MAX = str_c(mse_max, " (", mse_z_max, ")")) %>% 
-  select(hidden_units, MSE, SD, MIN, MAX)
-
-
-```
+## Other tables
+Tables 4 and 5 are calculated within the primary manuscript script.

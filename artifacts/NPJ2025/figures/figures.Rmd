@@ -33,7 +33,7 @@ plot = model_summaries %>%
 plot
 
 
-ggsave(filename = "figures/figure_2.pdf", plot = plot, width = 10, height = 8, dpi = 1200, units = "in", device = cairo_pdf)
+ggsave(filename = "figures/figure_2.pdf", plot = plot, width = 8, height = 6, dpi = 1200, units = "in", device = cairo_pdf)
 
 
 ```
@@ -54,13 +54,12 @@ plot = model_summaries %>%
         axis.text.y = element_text(size = 16),
         axis.title.y = element_text(size = 20)) +
   scale_x_discrete(labels = c("train" = "Train", "holdout" = "Generalization")) +
-  scale_y_continuous(position = "right") +
+  scale_y_continuous(limits = c(-15, 5),position = "right") +
   scale_fill_manual(values = c("goldenrod3", "firebrick4"))
 
 plot
 
-ggsave(filename = "figures/figure_2_y_axis_reference.pdf", plot = plot, width = 10, height = 8, dpi = 1200, units = "in", device = cairo_pdf)
+ggsave(filename = "figures/figure_2_y_axis_reference.pdf", plot = plot, width = 8, height = 6, dpi = 1200, units = "in", device = cairo_pdf)
 
 ```
-
 
