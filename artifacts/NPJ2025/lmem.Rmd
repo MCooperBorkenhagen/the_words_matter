@@ -10,18 +10,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Call libraries
 require(arrow)
-library(lattice)
-library(Matrix)
 library(lme4)
-#library(MASS)
 library(tidyverse)
 library(lmerTest)
 library(conflicted)
 
 conflicts_prefer(dplyr::select)
 conflicts_prefer(dplyr::filter)
-conflicts_prefer(lme4::lmer)
-
+conflicts_prefer(lmerTest::lmer)
 
 # control options of LMEM
 CONTROL = lmerControl(optimizer = "bobyqa")
@@ -45,11 +41,7 @@ dsubset <- davg %>%
     arrange(mse_rank)
 
 subset <- twm %>%
-    filter(
-        model_id %in% dsubset$model_id
-    ) %>%
-    mutate(
-        mse = (mse - mean(mse)) / sd(mse))
+    filter(model_id %in% dsubset$model_id)
 
 stopifnot(all(twm$holdout)) # should be holdout items only
 
@@ -66,13 +58,13 @@ unconditional_no_model_id = subset %>%
   lmer(mse_z ~ 1 + (1 | word), data = ., control = CONTROL)
 
 save(unconditional_no_model_id, file = "osf/unconditional_no_model_id.RData")
-
+#load(file = "osf/unconditional_no_model_id.RData")
 summary(unconditional_no_model_id)
 ```
 
 
 ## Statistical Model 2: Unconditional Model B
-This is the unconditional model (nested within main_no_hidden_slopes)
+This is the unconditional model.
 ```{r StatisticalModel2}
 
 set.seed(765)
@@ -86,8 +78,8 @@ summary(unconditional)
 ```
 
 
-## Statistical Model 3: Main Model No Slopes
-This is the main model without any slopes (nested within model_revised)
+## Statistical Model 3: Main Model
+This is the main model
 
 ```{r StatisticalModel3}
 set.seed(765)
@@ -95,25 +87,22 @@ set.seed(765)
 main = subset %>% 
   lmer(mse_z ~ 1 + hidden_standardized + (1 | model_id) + (1 | word), data = ., control = CONTROL)
 
-main
 summary(main)
 
 save(main, file = "osf/main.RData")
 
-
+main_confint = confint(main)
 ```
 
 
 ### Model comparisons
 An unconditional model with random intercepts for word and ensemble had a better fit than a model without an ensemble random effect.
 ```{r significanceTest1}
-model_comparison_1 = anova(unconditional_no_model_id, unconditional) # is model_id necessary? (Does performance vary based on ensemble?)
-
+# is model_id necessary? (Does performance vary based on ensemble?)
+model_comparison_1 = anova(unconditional_no_model_id, unconditional) 
 save(model_comparison_1, file = "osf/model_comparison_1.RData")
 
-
-# is fixed effect of hidden necessary? (Does representational capacity affect MSE?)
+# is fixed effect of hidden necessary? (Does representational capacity affect error?)
 model_comparison_2 = anova(unconditional, main) 
 save(model_comparison_2, file = "osf/model_comparison_2.RData")
-
 ```
