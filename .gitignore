@@ -23,7 +23,7 @@ tmp.*
 *.tex
 
 NPJ2025_files/
-
+artifacts/NPJ2025/letter.docx
 
 subset_data_for_lmem_v2.csv
 artifacts/NPJ2025/data/subset_data_for_lmem_v2.csv 
