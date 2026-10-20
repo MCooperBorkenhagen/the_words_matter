@@ -565,6 +565,12 @@ Seidenberg, M. S., Waters, G. S., Barnes, M. A., \& Tanenhaus, M. K. (1984). Whe
 
 \end{hangparas}
 
+# Author Contribution
+MJCB wrote manuscript, developed and implemented all models for simulation, and analyzed all data. DMK reviewed the manuscript. CRC reviewed the manuscript and code and contributed in analyzing data. All authors read and approved the final manuscript.
+
+# Funding Declaration
+There is no funding to declare for this research.
+
 # Data Availability Statement
 Data can be found at the project's page on the Open Science Framework (https://osf.io/qvu8m/?view_only=a17142c524924219ad3951ac85324d8e).
 
