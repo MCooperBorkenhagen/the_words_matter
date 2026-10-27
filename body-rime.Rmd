@@ -1,0 +1,299 @@
+---
+title: "Body-rime Units"
+output: html_document
+date: "2026-10-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
+
+kidwords = read_csv("data/kidwords/kidwords.csv", col_names = F) %>% 
+  pull(X1)
+
+orth = read_csv("data/kidwords/orth-code-kid.csv") %>% 
+  mutate(orth = str_remove_all(code, "_")) %>% 
+  select(-code)
+
+phon = read_csv("data/kidwords/phon-code-kid.csv") %>% 
+  mutate(phon = str_remove_all(code, "_")) %>% 
+  select(-code)
+
+all_letters = orth %>% 
+  pull(orth) %>% 
+  str_split(pattern = "") |>
+  unlist() |>
+  unique() |>
+  sort()
+
+
+all_phonemes = phon %>% 
+  pull(phon) %>% 
+  str_split(pattern = "") |>
+  unlist() |>
+  unique() |>
+  sort()
+
+all_phonemes
+
+df = orth %>% 
+  left_join(phon)
+
+# 1. Define the phonological vowel symbols present in your transcription
+# Add all vowel symbols used in your coding scheme (e.g., ARPAbet, CELEX, DISC, or IPA)
+phon_vowels = "@^aAeEiIoOuUWY"
+phon_vowel_regex <- paste0("[", phon_vowels, "].*$")
+
+# 2. Extract bodies and rimes
+df_units <- df %>%
+  mutate(
+    
+    # Orthographic body: first vowel (a, e, i, o, u) to end
+    body = str_extract(orth, "[aeiou].*$"),
+    
+    # Phonological rime: first vowel phoneme to end
+    rime = str_extract(phon, phon_vowel_regex)
+  )
+
+# 3. Aggregate all companion words sharing the same body and rime
+df_grouped <- df_units %>%
+  group_by(body) %>%
+  mutate(
+    # All other orthographic words sharing this body
+    body_matches = sapply(orth, function(w) {
+      matches <- setdiff(orth, w)
+      if (length(matches) == 0) NA_character_ else paste(matches, collapse = ", ")
+    }),
+    body_neighbor_count = n() - 1
+  ) %>%
+  ungroup() %>%
+  group_by(rime) %>%
+  mutate(
+    # All other phonological words sharing this rime
+    rime_matches = sapply(phon, function(p) {
+      matches <- setdiff(phon, p)
+      if (length(matches) == 0) NA_character_ else paste(matches, collapse = ", ")
+    }),
+    rime_neighbor_count = n() - 1
+  ) %>%
+  ungroup() %>%
+  select(orth, phon, body, body_matches, rime, rime_matches)
+```
+
+```{r}
+calculate_body_rime_metrics <- function(data, orth_col = "orth", body_col = "body", rime_col = "rime") {
+  
+  orth_sym <- sym(orth_col)
+  body_sym <- sym(body_col)
+  rime_sym <- sym(rime_col)
+  
+  data %>%
+    # Row-wise comparison against all other rows sharing the same orthographic body
+    group_by(!!body_sym) %>%
+    mutate(
+      # Total number of OTHER words sharing this orthographic body
+      body_n = n() - 1,
+      
+      # Family Size: Other words sharing BOTH body AND rime (Friends)
+      family_size = purrr::map_int(row_number(), function(i) {
+        target_rime <- (!!rime_sym)[i]
+        other_indices <- setdiff(seq_len(n()), i)
+        sum((!!rime_sym)[other_indices] == target_rime)
+      }),
+      
+      # Consistency: Friends / Total Body Neighbors (NA if no other body neighbors)
+      consistency = if_else(body_n == 0, NA_real_, family_size / body_n)
+    ) %>%
+    ungroup()
+}
+
+# with consistency measures
+df_units = calculate_body_rime_metrics(df_units) %>% 
+  mutate(index = match(word, kidwords)) # add index from kidwords dataset
+```
+
+
+
+```{r write}
+
+df_units %>% 
+  filter(consistency == 1) %>% 
+  write_csv(file = "data/kidwords/kidwords_with_perfect_consistency.csv")
+
+```
+
+
+# Create the samples
+Note that for the consistency-based samples we are doing this in R here, but for the random samples, there is a python script in `samples.ipynb`.
+
+```{r}
+library(dplyr)
+library(purrr)
+holdout_indices = read_csv("data/holdouts.csv")
+
+holdout_indices = holdout_indices %>% 
+  pull(`0...1`)
+
+
+
+# 2. Filter eligible families:
+# Exclude holdout row indices BEFORE building family clusters
+eligible_families <- df_units %>%
+  filter(
+    !is.na(consistency),
+    near(consistency, 1),
+    family_size >= 2,
+    !index %in% holdout_indices  # <-- Precludes holdouts
+  ) %>%
+  group_by(body, rime) %>%
+  # Remove any holdout index that might remain, and collect
+  summarise(
+    indices = list(setdiff(index, holdout_indices)),
+    .groups = "drop"
+  ) %>%
+  pull(indices)
+
+# 3. CRITICAL: Re-check family size >= 3
+# Removing holdouts might have reduced a 3-word family down to 2 or 1 word.
+# This filter keeps only families that still have at least 3 non-holdout words.
+eligible_families <- eligible_families[lengths(eligible_families) >= 3]
+
+# 4. GENERATE 10,000 SAMPLES & POPULATE BOOLEAN MATRIX
+set.seed(42)
+
+n_words_total <- nrow(df_lexicon_indexed) # All rows in original vocabulary
+n_samples     <- 10000
+target_words  <- 300
+
+cat("Allocating boolean matrix (", n_words_total, "rows x", n_samples, "columns)...\n")
+
+# Pre-allocate logical matrix filled with FALSE
+bool_sample_matrix <- matrix(
+  FALSE,
+  nrow = n_words_total,
+  ncol = n_samples,
+  dimnames = list(
+    paste0("word_", seq_len(n_words_total)),
+    paste0("sample_", seq_len(n_samples))
+  )
+)
+
+cat("Drawing 10,000 samples...\n")
+
+# Fill matrix columns: selected row indices become TRUE
+for (col_idx in seq_len(n_samples)) {
+  chosen_rows <- draw_sample_indices(
+    families        = eligible_families,
+    target_budget   = target_words,
+    min_family_size = 3
+  )
+  bool_sample_matrix[chosen_rows, col_idx] <- TRUE
+}
+
+# Tests
+# Quick verification: ensure each column has exactly 300 TRUEs
+stopifnot(all(colSums(bool_sample_matrix) == target_words))
+cat("Verification passed: Every column contains exactly 300 TRUE entries.\n")
+
+# Check that all holdout indices remain 0 across all 10,000 sample columns
+holdout_check <- all(bool_sample_matrix[holdout_indices, ] == 0L)
+
+cat("Holdouts completely excluded:", holdout_check, "\n")
+# Should return: TRUE
+
+
+# 4. WRITE TO FILE
+storage.mode(bool_sample_matrix) <- "integer" # convert to integers from boolean
+
+outpath <- "data/samples_consistent.csv"
+
+write_csv(
+  as.data.frame(bool_sample_matrix),
+  file = outpath,
+  col_names = FALSE
+)
+
+```
+
+
+# Examine families sampled
+
+```{r}
+
+# 1. MAP WORD INDICES TO FAMILIES
+# Create a unique family ID string for each word in the original vocabulary
+word_family_map <- df_units %>%
+  mutate(
+    # Unique family identifier combining orthographic body & phonological rime
+    family_id = paste(body, rime, sep = " + ")
+  ) %>%
+  select(index, orth, family_id)
+
+
+# 2. TAKE MATRIX & EXTRACT SAMPLED FAMILIES PER SAMPLE
+# Read back from the CSV:
+mat <- as.matrix(read.csv(outpath, header = FALSE))
+
+n_samples <- ncol(mat)
+
+# Extract sampled items for each column (sample) and summarize by family
+sample_family_audit_list <- vector("list", n_samples)
+
+for (col_idx in seq_len(n_samples)) {
+  # Indices where value is 1 (or TRUE)
+  sampled_indices <- which(mat[, col_idx] == 1L)
+  
+  sample_family_audit_list[[col_idx]] <- word_family_map %>%
+    filter(index %in% sampled_indices) %>%
+    group_by(family_id) %>%
+    summarise(
+      words_sampled_in_family = n(),
+      word_members = paste(orth, collapse = ", "),
+      .groups = "drop"
+    ) %>%
+    mutate(sample_id = col_idx)
+}
+
+# Combine into a single tidy dataframe
+sample_family_dataset <- bind_rows(sample_family_audit_list) %>%
+  select(sample_id, family_id, words_sampled_in_family, word_members)
+
+print(head(sample_family_dataset, 10))
+
+
+```
+
+### Additional tests for the families sampled
+
+```{r}
+# 3. CHECKS
+# Test 1: Exactly 300 words per sample
+words_per_sample <- sample_family_dataset %>%
+  group_by(sample_id) %>%
+  summarise(total_words = sum(words_sampled_in_family), .groups = "drop")
+
+stopifnot(all(words_per_sample$total_words == 300))
+cat("Passed: Every sample contains exactly 300 words.\n")
+
+# Test 2: Minimum family size constraint (no sampled family has < 3 members)
+min_fam_size <- min(sample_family_dataset$words_sampled_in_family)
+stopifnot(min_fam_size >= 3)
+cat("Passed: All sampled families contain at least 3 members (min observed =", min_fam_size, ").\n")
+
+# Test 3: No holdout words were sampled
+if (exists("holdout_indices")) {
+  holdouts_in_matrix <- sum(mat[holdout_indices, ])
+  stopifnot(holdouts_in_matrix == 0)
+  cat("Passed: Zero holdout words present across all 10,000 samples.\n")
+}
+
+# Test 4: Check truncation
+# Distribution of family sizes present in the samples
+family_size_dist <- table(sample_family_dataset$words_sampled_in_family)
+cat("\nSampled family size counts:\n")
+print(family_size_dist)
+# Make sur eno family has fewer than three members
+
+
+```
+
